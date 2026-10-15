@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0e1018">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>健身训练助手</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { overflow-x:hidden; }
+  body {
+    font-family:"PingFang SC","Microsoft YaHei",-apple-system,sans-serif;
+    background:#0b0d14; color:#f5f7fa; min-height:100vh;
+  }
+  a { color:inherit; text-decoration:none; }
+  button { font-family:inherit; }
+  #app {
+    max-width:480px; margin:0 auto; min-height:100vh; position:relative;
+    background:#0e1018;
+    background-image:
+      radial-gradient(1000px 500px at 85% -5%, rgba(240,127,87,.14), transparent 60%),
+      radial-gradient(800px 500px at -10% 30%, rgba(99,72,191,.12), transparent 60%);
+    background-attachment:fixed;
+    box-shadow:0 0 60px rgba(0,0,0,.5);
+  }
+
+  /* ===== Hero 渐变区（首页 / 详情页头部） ===== */
+  .hero {
+    position:relative; padding:calc(22px + env(safe-area-inset-top)) 20px 30px; overflow:hidden;
+    background:linear-gradient(168deg,#221c46 0%,#4a2a5a 34%,#8f3d55 62%,#d96b4f 84%,#f2a65a 100%);
+  }
+  .hero::after {
+    content:""; position:absolute; left:0; right:0; bottom:-2px; height:110px; pointer-events:none;
+    background:
+      linear-gradient(135deg, transparent 62%, rgba(255,255,255,.06) 62.5%) left/55% 100% no-repeat,
+      linear-gradient(-150deg, transparent 55%, rgba(13,16,24,.55) 55.5%) right/70% 100% no-repeat,
+      linear-gradient(to top, #0e1018 4%, rgba(14,16,24,0) 90%);
+    clip-path:polygon(0 100%,0 62%,12% 40%,24% 58%,38% 22%,52% 52%,66% 30%,80% 55%,92% 38%,100% 50%,100% 100%);
+  }
+  .hero > * { position:relative; z-index:2; }
+  .h-top { display:flex; align-items:center; justify-content:space-between; }
+  .badge { font-size:11px; padding:4px 11px; border-radius:99px; color:#ffe8cf;
+    background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.22); backdrop-filter:blur(8px); }
+  .gear { width:34px; height:34px; border-radius:12px; background:rgba(255,255,255,.14);
+    border:1px solid rgba(255,255,255,.2); display:flex; align-items:center; justify-content:center; font-size:16px; }
+  .hero .greet { font-size:12px; color:rgba(255,255,255,.72); letter-spacing:1px; }
+  .hero h2 { font-size:29px; font-weight:800; margin:10px 0 4px; letter-spacing:1px; text-shadow:0 2px 18px rgba(0,0,0,.3); }
+  .hero .sub { font-size:12.5px; color:rgba(255,255,255,.78); }
+  .stats { display:flex; gap:10px; margin-top:18px; }
+  .mini-stat { flex:1; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18);
+    backdrop-filter:blur(12px); border-radius:14px; padding:10px 12px; min-width:0; }
+  .mini-stat .k { font-size:10.5px; color:rgba(255,255,255,.75); }
+  .mini-stat .v { font-size:15px; font-weight:700; margin-top:2px; white-space:nowrap; }
+  .mini-stat .v i { font-style:normal; font-size:10.5px; color:rgba(255,255,255,.65); font-weight:400; }
+  .ring { width:52px; height:52px; border-radius:50%; flex-shrink:0; align-self:center;
+    background:conic-gradient(#ffd9a0 0 0%, rgba(255,255,255,.18) 0 100%);
+    display:flex; align-items:center; justify-content:center; }
+  .ring i { width:40px; height:40px; border-radius:50%; background:#3a2a44; font-style:normal;
+    display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; }
+
+  /* ===== 内容区 ===== */
+  .content { padding:16px 16px calc(104px + env(safe-area-inset-bottom)); }
+  .sec-title { font-size:13px; color:rgba(255,255,255,.55); margin:12px 4px 10px; letter-spacing:1px; }
+
+  /* 毛玻璃卡片 */
+  .g-card {
+    background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.1);
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    border-radius:18px; padding:16px; margin-bottom:12px;
+  }
+  .entry { display:flex; align-items:center; gap:14px; }
+  .entry .ico { width:46px; height:46px; border-radius:14px; display:flex; align-items:center; justify-content:center;
+    font-size:22px; flex-shrink:0;
+    background:linear-gradient(150deg, rgba(242,166,90,.25), rgba(201,75,94,.2)); border:1px solid rgba(242,166,90,.3); }
+  .entry .ico.g2 { background:linear-gradient(150deg, rgba(126,240,196,.18), rgba(72,140,191,.18)); border-color:rgba(126,240,196,.28); }
+  .entry .ico.g3 { background:linear-gradient(150deg, rgba(196,132,252,.2), rgba(99,72,191,.18)); border-color:rgba(196,132,252,.3); }
+  .entry .t { flex:1; min-width:0; }
+  .entry .t b { font-size:16px; display:block; }
+  .entry .t span { font-size:11.5px; color:rgba(255,255,255,.55); }
+  .entry .arrow { color:rgba(255,255,255,.35); font-size:18px; }
+
+  /* 部位卡网格 */
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .part { border-radius:16px; padding:14px; position:relative; overflow:hidden; display:block;
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.09); }
+  .part b { font-size:15px; display:block; margin-top:26px; }
+  .part span { font-size:10.5px; color:rgba(255,255,255,.5); }
+  .part::before { content:""; position:absolute; width:70px; height:70px; border-radius:50%; top:-24px; right:-20px;
+    background:radial-gradient(circle, rgba(242,166,90,.35), transparent 70%); }
+  .part:nth-child(3n+2)::before { background:radial-gradient(circle, rgba(126,240,196,.3), transparent 70%); }
+  .part:nth-child(3n)::before { background:radial-gradient(circle, rgba(196,132,252,.3), transparent 70%); }
+
+  /* ===== 底部悬浮胶囊 Dock ===== */
+  .dock {
+    position:fixed; left:50%; transform:translateX(-50%);
+    width:min(452px, calc(100% - 28px));
+    bottom:calc(14px + env(safe-area-inset-bottom)); z-index:50;
+    display:flex; background:rgba(20,22,32,.72); border:1px solid rgba(255,255,255,.12);
+    backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+    border-radius:99px; padding:6px; box-shadow:0 10px 30px rgba(0,0,0,.45);
+  }
+  .dock a { flex:1; display:flex; flex-direction:column; align-items:center; gap:1px;
+    font-size:10.5px; color:rgba(255,255,255,.5); padding:6px 0 5px; border-radius:99px; }
+  .dock a i { font-style:normal; font-size:17px; line-height:1.2; }
+  .dock a.on { color:#0e1018; background:linear-gradient(120deg,#ffd9a0,#f2a65a); font-weight:700; }
+
+  /* ===== 子页顶栏 ===== */
+  .topbar { position:sticky; top:0; z-index:20; display:flex; align-items:center; gap:6px;
+    padding:calc(12px + env(safe-area-inset-top)) 14px 12px;
+    background:rgba(14,16,24,.88); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    border-bottom:1px solid rgba(255,255,255,.06); }
+  .topbar .back { font-size:22px; line-height:1; color:rgba(255,255,255,.8); padding:0 8px 2px 2px; cursor:pointer; }
+  .topbar h1 { font-size:17px; font-weight:700; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .topbar .r-act { font-size:12.5px; color:#ffd9a0; padding:4px 6px; cursor:pointer; }
+
+  /* ===== 动作详情 ===== */
+  .d-hero { position:relative; padding:calc(14px + env(safe-area-inset-top)) 20px 22px; overflow:hidden;
+    background:linear-gradient(160deg,#1d2742 0%,#3a2a5a 45%,#7a3a52 75%,#c96a4e 100%); }
+  .d-hero .back { font-size:12.5px; color:rgba(255,255,255,.85); cursor:pointer; position:relative; z-index:2; }
+  .d-hero .fig { height:150px; margin:12px 0 8px; display:flex; align-items:center; justify-content:center; position:relative; z-index:2; }
+  .d-hero .fig svg { max-height:100%; }
+  .d-hero h2 { font-size:26px; font-weight:800; letter-spacing:1px; position:relative; z-index:2; }
+  .chips { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; position:relative; z-index:2; }
+  .chip { font-size:10.5px; padding:4px 11px; border-radius:99px; color:#ffe8cf;
+    background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.22); backdrop-filter:blur(8px); }
+  .chip.lv0 { color:#bff3dd; border-color:rgba(126,240,196,.35); }
+  .sets-line { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+  .sets-line b { font-size:22px; background:linear-gradient(90deg,#ffd9a0,#ff9f7a);
+    -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .sets-line span { font-size:11.5px; color:rgba(255,255,255,.55); }
+  .card-t { font-size:13px; color:rgba(255,255,255,.55); letter-spacing:1px; margin-bottom:8px; }
+  .step { display:flex; gap:12px; padding:10px 0; border-bottom:1px dashed rgba(255,255,255,.08); }
+  .step:last-child { border-bottom:none; }
+  .step i { width:22px; height:22px; border-radius:50%; flex-shrink:0; font-style:normal; font-size:11px; font-weight:700;
+    background:linear-gradient(120deg,#ffd9a0,#f2955a); color:#1a1206;
+    display:flex; align-items:center; justify-content:center; }
+  .step p { font-size:13px; color:rgba(255,255,255,.88); line-height:1.6; }
+  .dot-line { display:flex; gap:10px; padding:6px 0; }
+  .dot-line::before { content:""; width:6px; height:6px; border-radius:50%; flex-shrink:0; margin-top:7px;
+    background:linear-gradient(120deg,#ffd9a0,#f2955a); }
+  .dot-line p { font-size:13px; color:rgba(255,255,255,.88); line-height:1.6; }
+  .tip-card { border-radius:16px; padding:14px 16px; font-size:12.5px; margin-bottom:12px; line-height:1.7;
+    background:linear-gradient(120deg, rgba(242,166,90,.14), rgba(201,75,94,.1));
+    border:1px solid rgba(242,166,90,.28); color:#ffd9b0; }
+  .video-btn { display:block; text-align:center; padding:13px; border-radius:14px; font-size:13.5px; font-weight:600;
+    color:#ffd9a0; border:1px solid rgba(255,217,160,.4); background:rgba(255,217,160,.08); margin-bottom:12px; }
+
+  /* ===== 列表行（动作 / 食物 / 记录） ===== */
+  .row { display:flex; align-items:center; gap:12px; }
+  .row .thumb { width:56px; height:44px; border-radius:12px; flex-shrink:0; overflow:hidden;
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
+    display:flex; align-items:center; justify-content:center; }
+  .row .thumb svg { width:100%; height:100%; }
+  .row .t { flex:1; min-width:0; }
+  .row .t b { font-size:14.5px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .row .t span { font-size:11px; color:rgba(255,255,255,.55); }
+  .row .arrow { color:rgba(255,255,255,.35); font-size:17px; }
+  .tag { font-size:10px; padding:2px 8px; border-radius:99px; margin-left:6px; white-space:nowrap; }
+  .tag.lv0 { color:#bff3dd; background:rgba(126,240,196,.12); border:1px solid rgba(126,240,196,.3); }
+  .tag.lv1 { color:#ffe8cf; background:rgba(242,166,90,.12); border:1px solid rgba(242,166,90,.3); }
+  .gray { opacity:.42; }
+
+  .mrow { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px dashed rgba(255,255,255,.08); }
+  .mrow:last-child { border-bottom:none; }
+  .mrow .t { flex:1; min-width:0; }
+  .mrow .t b { font-size:13.5px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mrow .t span { font-size:11px; color:rgba(255,255,255,.55); }
+  .mrow .v { font-size:12px; color:#ffd9a0; white-space:nowrap; text-align:right; }
+  .mrow .v span { display:block; font-size:10.5px; color:rgba(255,255,255,.5); }
+  .mrow .del { color:rgba(255,255,255,.35); font-size:17px; padding:4px 6px; cursor:pointer; flex-shrink:0; }
+  .meal-head { display:flex; align-items:baseline; gap:8px; margin-bottom:4px; }
+  .meal-head b { font-size:15px; }
+  .meal-head .kcal { font-size:11px; color:rgba(255,255,255,.5); }
+  .meal-head .add { margin-left:auto; font-size:12.5px; color:#ffd9a0; padding:4px 6px; cursor:pointer; }
+
+  .bar { height:8px; border-radius:99px; background:rgba(255,255,255,.12); overflow:hidden; margin-top:6px; }
+  .bar i { display:block; height:100%; border-radius:99px; background:linear-gradient(90deg,#ffd9a0,#f2955a); transition:width .3s; }
+  .sum-row { display:flex; gap:14px; }
+  .sum-row > div { flex:1; min-width:0; }
+  .sum-num { font-size:20px; font-weight:800; }
+  .sum-num i { font-style:normal; font-size:11px; color:rgba(255,255,255,.55); font-weight:400; }
+  .over { color:#ff9f7a !important; }
+
+  /* ===== 表单 ===== */
+  .inp { width:100%; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14);
+    border-radius:12px; padding:12px 14px; color:#fff; font-size:14px; outline:none; font-family:inherit; }
+  .inp:focus { border-color:rgba(242,166,90,.5); }
+  .inp::placeholder { color:rgba(255,255,255,.3); }
+  .btn { display:block; width:100%; text-align:center; padding:13px; border-radius:14px; font-size:14px; font-weight:700;
+    border:none; cursor:pointer; color:#1a1206; background:linear-gradient(120deg,#ffd9a0,#f2955a); }
+  .btn[disabled] { opacity:.4; }
+  .btn-ghost { background:rgba(255,255,255,.07); color:rgba(255,255,255,.85); border:1px solid rgba(255,255,255,.14); }
+  .btn + .btn { margin-top:10px; }
+  .preset { display:inline-block; font-size:12px; padding:7px 13px; border-radius:99px; cursor:pointer; margin:0 8px 8px 0;
+    color:#ffe8cf; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.16); }
+  .preview { font-size:14px; color:#ffd9a0; }
+  .preview b { font-size:18px; }
+
+  .empty { text-align:center; color:rgba(255,255,255,.45); font-size:12.5px; padding:26px 10px; line-height:1.8; }
+
+  /* ===== Onboarding ===== */
+  .ob-card { display:block; border-radius:22px; padding:22px 20px; margin-bottom:16px; position:relative; overflow:hidden;
+    background:rgba(255,255,255,.06); border:1px solid rgba(242,166,90,.35);
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); }
+  .ob-card.g2 { border-color:rgba(126,240,196,.32); }
+  .ob-card .emo { font-size:34px; }
+  .ob-card b { font-size:19px; display:block; margin:10px 0 4px; }
+  .ob-card p { font-size:12.5px; color:rgba(255,255,255,.6); line-height:1.7; }
+  .ob-card .go { position:absolute; right:18px; top:22px; font-size:12px; color:#ffd9a0;
+    border:1px solid rgba(255,217,160,.4); border-radius:99px; padding:5px 12px; }
+  .ob-cards { padding:4px 18px calc(40px + env(safe-area-inset-bottom)); margin-top:-26px; position:relative; z-index:3; }
+
+  /* ===== 弹层 / 提示 ===== */
+  .modal { position:fixed; inset:0; z-index:100; background:rgba(5,6,10,.6); backdrop-filter:blur(6px);
+    display:flex; align-items:flex-end; justify-content:center; }
+  .modal.hide { display:none; }
+  .m-box { width:min(480px,100%); background:#171a26; border:1px solid rgba(255,255,255,.12);
+    border-bottom:none; border-radius:22px 22px 0 0; padding:20px 18px calc(20px + env(safe-area-inset-bottom)); }
+  .m-box h3 { font-size:16px; margin-bottom:12px; }
+  .m-btns { display:flex; gap:10px; margin-top:16px; }
+  .m-btns .btn { margin-top:0; }
+  .toast { position:fixed; left:50%; bottom:calc(100px + env(safe-area-inset-bottom)); transform:translateX(-50%);
+    background:rgba(20,22,32,.95); border:1px solid rgba(255,255,255,.15); color:#ffd9a0;
+    font-size:13px; padding:10px 18px; border-radius:99px; z-index:120;
+    opacity:0; pointer-events:none; transition:opacity .25s; white-space:nowrap; }
+  .toast.show { opacity:1; }
+  .set-row { display:flex; align-items:center; gap:10px; }
+  .set-row .inp { flex:1; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<nav class="dock" id="dock" style="display:none"></nav>
+<div class="modal hide" id="modal"><div class="m-box" id="mbox"></div></div>
+<div class="toast" id="toast"></div>
+<script>
+"use strict";
+/* ================= 基础常量 ================= */
+const LS_S = "ft_settings", LS_D = "ft_diet";
+const MEALS = [
+  {id:"breakfast", name:"早餐"},
+  {id:"lunch",     name:"午餐"},
+  {id:"dinner",    name:"晚餐"},
+  {id:"snack",     name:"加餐"}
+];
+const MODE_NAME = {home:"居家版", gym:"健身房版"};
+const LEVEL_ORD = {"初级":0, "中级":1};
+
+const PARTS = [
+  { id:"chest",  name:"胸部", subs:[
+    {id:"chest_upper", name:"上胸"},{id:"chest_mid", name:"中胸"},{id:"chest_lower", name:"下胸"} ]},
+  { id:"back",   name:"背部", subs:[
+    {id:"back_upper", name:"上背"},{id:"back_lats", name:"背阔肌"},{id:"back_lower", name:"下背"} ]},
+  { id:"shoulder", name:"肩部", subs:[
+    {id:"sh_front", name:"前束"},{id:"sh_mid", name:"中束"},{id:"sh_rear", name:"后束"} ]},
+  { id:"arms",   name:"手臂", subs:[
+    {id:"arm_bi", name:"肱二头肌"},{id:"arm_tri", name:"肱三头肌"},{id:"arm_fore", name:"小臂"} ]},
+  { id:"legs",   name:"腿部", subs:[
+    {id:"leg_quad", name:"股四头肌"},{id:"leg_ham", name:"腘绳肌+臀"},{id:"leg_calf", name:"小腿"} ]},
+  { id:"core",   name:"核心", subs:[
+    {id:"core_up", name:"上腹"},{id:"core_low", name:"下腹"},{id:"core_side", name:"侧腹"} ]}
+];
+const PART_BY_ID = {}; PARTS.forEach(p=>PART_BY_ID[p.id]=p);
+const SUB_BY_ID = {}; PARTS.forEach(p=>p.subs.forEach(s=>{ SUB_BY_ID[s.id]=Object.assign({partId:p.id},s); }));
+
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function todayKey(){ const d=new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function weekdayCN(){ return "周"+"日一二三四五六"[new Date().getDay()]; }
+
+/* ================= 动作库 ================= */
+const EXERCISES = [
+/* ---------- 胸 · 上胸 ---------- */
+{id:"pushup_decline",name:"下斜俯卧撑",subId:"chest_upper",mode:"home",equipment:"徒手",level:"中级",sets:"4 组 × 10-12 次",
+ steps:["双脚搭在 30-50cm 高的凳面或床沿上，双手撑地与肩同宽，身体从头到脚绷成一条直线","屈肘缓慢下放 3 秒，至胸口接近地面，肘部与躯干约成 45°","胸部发力推起至手臂接近伸直，顶峰收缩 1 秒"],
+ tips:["全程收腹夹臀，身体像一块板不塌腰","下放吸气、推起呼气","脚垫得越高，上胸刺激越强"],
+ mistakes:["腰部下塌、臀部翘起","只下放一半就推起","耸肩把肩耸到耳朵边"],
+ svg:"pl_decline",video:"https://search.bilibili.com/all?keyword=下斜俯卧撑教学"},
+{id:"fly_floor_incline",name:"哑铃地板飞鸟（上斜角度）",subId:"chest_upper",mode:"home",equipment:"哑铃",level:"初级",sets:"3 组 × 12-15 次",
+ steps:["仰卧在瑜伽垫上，屈膝踩地，双手持哑铃举在胸部正上方、掌心相对","保持肘部微屈且角度固定，双臂向体侧弧形打开，大臂接近地面即止","上胸发力，沿原弧线把哑铃环抱回起点，像环抱一棵大树"],
+ tips:["想象用上臂往中间挤，而不是用手抓握","重量宁轻勿重，保持动作可控","下放慢 2-3 秒，感受胸部被拉长"],
+ mistakes:["肘关节角度忽大忽小，做成了卧推","下放时哑铃砸地反弹借力","重量过大导致肩前侧不适"],
+ svg:"lie_fly_floor"},
+{id:"bench_press_incline_bb",name:"上斜杠铃卧推",subId:"chest_upper",mode:"gym",equipment:"杠铃",level:"中级",sets:"4 组 × 8-12 次",
+ steps:["凳面调至 30-45°，躺稳后肩胛骨后缩下沉贴紧凳面，握距略宽于肩","起杠后停在锁骨正上方，缓慢下放至杠轻触上胸（锁骨下方一拳处），小臂始终垂直地面","沿略向后的小弧线推回起始位置"],
+ tips:["双脚踩实地面，臀部不离凳","杠的落点在上胸而不是脖子","推起时不要耸肩"],
+ mistakes:["凳面角度超过 45°，练成了肩推","腰部过度拱起离凳","杠铃弹胸借力"],
+ svg:"lie_incline",video:"https://search.bilibili.com/all?keyword=上斜杠铃卧推教学"},
+{id:"bench_press_incline_db",name:"上斜哑铃卧推",subId:"chest_upper",mode:"gym",equipment:"哑铃",level:"中级",sets:"4 组 × 8-12 次",
+ steps:["凳面调至 30-45°，哑铃先置于大腿上，借力躺倒并举至肩上方、掌心朝前","下放至哑铃与上胸同高、大臂略低于凳面，小臂垂直地面","推起时轨迹略向内收，顶端保持微屈肘、哑铃不相撞"],
+ tips:["顶端停留 1 秒主动挤压上胸","两只哑铃发力对称，不一高一低","手腕保持中立不后折"],
+ mistakes:["顶端哑铃互撞发出响声","下放过快失控","凳角过高练成了肩部"],
+ svg:"lie_incline_db"},
+{id:"fly_incline_db",name:"上斜哑铃飞鸟",subId:"chest_upper",mode:"gym",equipment:"哑铃",level:"中级",sets:"3 组 × 12-15 次",
+ steps:["凳面调至 30-45°，持铃举于上胸正上方、掌心相对、肘微屈","固定肘部角度，缓慢向两侧打开至大臂与躯干在同一平面","上胸发力沿原弧线抱合回起点"],
+ tips:["想象环抱一个大木桶","下放 3 秒，充分感受上胸拉伸","重量以能标准完成 12 次为准"],
+ mistakes:["手臂伸太直，增加肩关节压力","打开过深拉伤肩前束","借力把哑铃甩起来"],
+ svg:"lie_fly"},
+/* ---------- 胸 · 中胸 ---------- */
+{id:"pushup",name:"标准俯卧撑",subId:"chest_mid",mode:"home",equipment:"徒手",level:"初级",sets:"4 组 × 12-15 次",
+ steps:["双手撑在胸部两侧地面、与肩同宽，身体从头到脚成一条直线","屈肘下放至胸口离地约一拳，肘部与躯干约 45°","胸部发力推起还原，顶峰收缩"],
+ tips:["全程核心收紧，身体像一块板","做不到标准就先做手撑高的上斜版本","下放吸气、推起呼气"],
+ mistakes:["塌腰或撅臀","头先往下探凑次数","肘外展成 90° 伤肩"],
+ svg:"pl_pushup",video:"https://search.bilibili.com/all?keyword=标准俯卧撑教学"},
+{id:"press_floor_db",name:"哑铃地板卧推",subId:"chest_mid",mode:"home",equipment:"哑铃",level:"初级",sets:"4 组 × 10-12 次",
+ steps:["仰卧垫上，哑铃举在胸部正上方、掌心朝前","缓慢下放至大臂轻触地面（地板自然限制幅度），小臂垂直地面","胸部发力向上推起，顶端哑铃不相撞"],
+ tips:["大臂触地即停，不要砸地反弹","顶端挤压胸肌 1 秒","腰背自然贴垫，不过度拱起"],
+ mistakes:["借地面反弹推起","两只哑铃一高一低","下放时肘部过度外展"],
+ svg:"lie_floor_press"},
+{id:"bench_press_flat_bb",name:"平板杠铃卧推",subId:"chest_mid",mode:"gym",equipment:"杠铃",level:"中级",sets:"4 组 × 8-12 次",
+ steps:["躺于平凳，眼睛在杠正下方，肩胛后缩下沉，握距略宽于肩","起杠停在胸正上方，缓慢下放至杠触中胸，小臂垂直地面","沿小弧线推回起始位"],
+ tips:["脚踩实、臀贴凳、下背保持自然微弓","杠触胸即推，不要弹胸","冲大重量时一定找人保护"],
+ mistakes:["手腕后折承重","杠铃弹胸借力","臀部离开凳面"],
+ svg:"lie_bench",video:"https://search.bilibili.com/all?keyword=杠铃卧推教学"},
+{id:"bench_press_flat_db",name:"平板哑铃卧推",subId:"chest_mid",mode:"gym",equipment:"哑铃",level:"中级",sets:"4 组 × 8-12 次",
+ steps:["哑铃放在大腿上借力躺倒，举至胸上方、掌心朝前","下放至大臂略低于凳面、哑铃在胸两侧","推起时轨迹略向内收，顶端保持微屈肘"],
+ tips:["哑铃比杠铃下放更深，拉伸感更强","顶端主动夹胸 1 秒","收哑铃时先放回大腿再坐起，别直接丢"],
+ mistakes:["顶端哑铃相撞","下放过快失控","一只手先发力变成跷跷板"],
+ svg:"lie_bench_db"},
+{id:"pec_deck",name:"蝴蝶机夹胸",subId:"chest_mid",mode:"gym",equipment:"蝴蝶机",level:"初级",sets:"3 组 × 12-15 次",
+ steps:["调座高使上臂与地面平行、前臂贴住挡垫","肩胛贴紧靠背，双臂向体前合拢至双手接近","顶峰挤压 1 秒后缓慢回放"],
+ tips:["全程想着用胸把手挤到一起","回放控制 2-3 秒，保持张力","重量轻一点，避免肩前束代偿"],
+ mistakes:["回放时配重片哐当砸落","弓背离开靠垫","只用小臂发力"],
+ svg:"seat_fly"},
+/* ---------- 胸 · 下胸 ---------- */
+{id:"pushup_incline",name:"上斜俯卧撑",subId:"chest_lower",mode:"home",equipment:"徒手",level:"初级",sets:"4 组 × 12-15 次",
+ steps:["双手撑在稳固的桌沿或床沿，身体后撤成一条直线","屈肘下放至胸口接近台沿，肘与躯干约 45°","胸部发力推起还原"],
+ tips:["手撑越高越轻松、越低越难，循序渐进","顶峰收缩时下胸感受更明显","核心全程收紧不塌腰"],
+ mistakes:["身体没绷直、塌腰","只点头不弯肘","撑在会滑动的不稳家具上"],
+ svg:"pl_incline"},
+{id:"dip_chest",name:"双杠臂屈伸",subId:"chest_lower",mode:"both",equipment:"双杠",level:"中级",sets:"4 组 × 8-12 次",
+ steps:["双手撑杠把身体悬空，上身前倾约 30°、屈膝勾腿","屈肘缓慢下放至大臂接近平行地面，感受胸部拉伸","胸与肱三头合力把身体推起"],
+ tips:["前倾越多越偏胸，身体直立越偏三头","下放 3 秒，推起 1 秒","肩部有伤病史者下放幅度减半"],
+ mistakes:["下放过深导致肩前侧疼痛","耸肩","身体前后摆动借力"],
+ svg:"st_dip",video:"https://search.bilibili.com/all?keyword=双杠臂屈伸教学"},
+{id:"bench_press_decline_bb",name:"下斜杠铃卧推",subId:"chest_lower",mode:"gym",equipment:"杠铃",level:"中级",sets:"4 组 × 8-12 次",
+ steps:["躺于 -15~-30° 的下斜凳，脚踝勾住固定垫","握距略宽于肩，起杠停在下胸上方","下放至杠触下胸（胸骨下端），沿垂直轨迹推回"],
+ tips:["落点在下胸，不要落到腹部","起杠前确认脚踝卡稳","推起时杠的轨迹接近垂直向上"],
+ mistakes:["脚踝没固定导致身体下滑","握距过窄变成三头推","弹胸借力"],
+ svg:"lie_decline"},
+{id:"fly_cable_high",name:"绳索高位夹胸",subId:"chest_lower",mode:"gym",equipment:"绳索",level:"中级",sets:"3 组 × 12-15 次",
+ steps:["两侧滑轮调至高位，双手各握把手，弓步站稳、上身微前倾","双臂从侧上方向下向内划大弧，双手在腹前接近或交叉","顶峰收缩 1 秒后缓慢放回"],
+ tips:["轨迹像环抱一个圆桶向下合拢","回放时控制，别被重量拽回去","肘部保持微屈且角度不变"],
+ mistakes:["手臂伸直硬拉","重量大到身体被拽动","回放时完全泄力"],
+ svg:"st_cablefly"},
+/* ---------- 背 · 上背 ---------- */
+{id:"face_pull_band",name:"弹力带面拉",subId:"back_upper",mode:"home",equipment:"弹力带",level:"初级",sets:"4 组 × 15 次",
+ steps:["弹力带固定在面部同高处，双手握带两端、掌心朝下","向后拉向面部，同时手臂外旋使拇指朝后，终点时双肘高于肩、双手在耳侧","缓慢放回，保持张力"],
+ tips:["拉向额头到鼻子之间的位置","先启动肩胛骨后缩，再屈肘","放回控制 3 秒"],
+ mistakes:["耸肩借力","把带子拉向胸口做成了划船","放回时完全松掉张力"],
+ svg:"st_facepull"},
+{id:"revfly_db_back",name:"俯身哑铃反向飞鸟",subId:"back_upper",mode:"home",equipment:"哑铃",level:"初级",sets:"4 组 × 12-15 次",
+ steps:["屈髋俯身至躯干接近平行地面，核心收紧、背部打直","哑铃垂于肩下、肘微屈，向两侧展开至大臂与背同平面","主动后缩肩胛骨，顶峰停 1 秒后缓慢下放"],
+ tips:["想着用肩胛骨把手臂夹起来","重量宜轻，动作标准优先","头颈中立，眼看地面"],
+ mistakes:["弓着背做","甩哑铃借力","手臂伸得过直"],
+ svg:"st_revfly"},
+{id:"row_machine_high",name:"器械高位划船",subId:"back_upper",mode:"gym",equipment:"划船机",level:"中级",sets:"4 组 × 10-12 次",
+ steps:["调胸垫高度使把手与上胸同高，胸口贴紧靠垫","先肩胛后缩，再屈肘向后拉，把手至上胸两侧","顶峰收缩 1 秒，缓慢放回"],
+ tips:["拉向胸部而不是腹部，更偏上背","回放时让肩胛骨完全前伸再启动下一次","躯干贴垫不后仰"],
+ mistakes:["只用手臂拉，肩胛不动","胸口离垫借力","回放过快配重片撞击"],
+ svg:"seat_row"},
+{id:"row_cable_wide",name:"坐姿宽握绳索划船",subId:"back_upper",mode:"gym",equipment:"绳索",level:"中级",sets:"4 组 × 10-12 次",
+ steps:["使用宽握杆，坐稳踩实脚踏，躯干直立","先收肩胛，再拉把至上胸/锁骨下方，双肘向两侧打开","顶峰收缩后控制放回"],
+ tips:["宽握加拉高位，更刺激斜方中下束与菱形肌","躯干前后摆动控制在 10° 以内","放回时把肩胛骨送出去，充分拉伸"],
+ mistakes:["大幅后仰甩腰","拉到腹部变成了窄握划船","耸肩"],
+ svg:"seat_row"},
+{id:"shrug_db",name:"哑铃耸肩",subId:"back_upper",mode:"both",equipment:"哑铃",level:"初级",sets:"4 组 × 12-15 次",
+ steps:["直立，双手持哑铃自然垂于体侧","斜方肌发力把肩膀垂直耸向耳朵，顶端停 1-2 秒","缓慢下放至完全拉伸"],
+ tips:["直上直下，不要前后绕环","顶端用力收缩","重量可以偏大，但动作不能变形"],
+ mistakes:["绕肩转圈，伤颈椎","屈肘用手臂往上提","下放泄力自由落体"],
+ svg:"stand_shrug"},
+/* ---------- 背 · 背阔肌 ---------- */
+{id:"pulldown_band",name:"弹力带高位下拉",subId:"back_lats",mode:"home",equipment:"弹力带",level:"初级",sets:"4 组 × 12-15 次",
+ steps:["弹力带固定在头顶上方的高处置物点，跪姿或坐姿","双手宽握，先沉肩收肩胛，再屈肘把带拉至上胸，双肘指向地面","顶峰收缩，缓慢放回"],
+ tips:["启动靠沉肩胛，不是靠手臂","躯干保持直立不后仰","拉下呼气、放回吸气"],
+ mistakes:["耸肩用斜方借力","拉到颈后","放回时整个人被弹回去"],
+ svg:"seat_pulldown"},
+{id:"row_db_onearm",name:"单臂哑铃划船",subId:"back_lats",mode:"home",equipment:"哑铃",level:"初级",sets:"4 组 × 10-12 次/侧",
+ steps:["一手和同侧膝撑在凳面或床边，背部打直与地面接近平行","哑铃自然下垂，先收肩胛，再屈肘沿体侧把哑铃拉向髋部","顶峰收缩 1 秒，缓慢下放"],
+ tips:["轨迹是向后上方拉，不是垂直往上提","头颈中立，眼看地面","两侧组数次数保持一致"],
+ mistakes:["躯干旋转借力","弓背","只用手臂提拉、肩胛骨不动"],
+ svg:"st_row_db",video:"https://search.bilibili.com/all?keyword=单臂哑铃划船教学"},
+{id:"pullup",name:"引体向上",subId:"back_lats",mode:"gym",equipment:"单杠",level:"中级",sets:"4 组 × 6-10 次",
+ steps:["正握单杠略宽于肩，悬垂时先沉肩","背阔肌发力把身体拉起至下巴过杠","缓慢下放至手臂接近伸直"],
+ tips:["启动先沉肩胛，再屈肘","想象把肘拉向裤兜","暂时做不了可用弹力带辅助，或跳起后做缓慢离心"],
+ mistakes:["摆动身体甩上去","只拉半程","下放失控砸肩"],
+ svg:"st_pullup",video:"https://search.bilibili.com/all?keyword=引体向上教学"},
+{id:"pulldown",name:"高位下拉",subId:"back_lats",mode:"gym",equipment:"下拉器械",level:"初级",sets:"4 组 × 10-12 次",
+ steps:["调腿垫固定好大腿，宽握横杆","躯干直立微后仰，先沉肩胛再屈肘，把杆拉至锁骨","顶峰收缩后缓慢放回至手臂接近伸直"],
+ tips:["拉到锁骨，不要拉到颈后","放回时充分感受背阔肌被拉长","握距太宽反而缩短动作行程"],
+ mistakes:["后仰甩腰做成划船","拉向颈后伤肩","配重片砸落"],
+ svg:"seat_pulldown"},
+{id:"row_bb",name:"杠铃划船",subId:"back_lats",mode:"gym",equipment:"杠铃",level:"中级",sets:"4 组 × 8-12 次",
+ steps:["屈髋俯身约 45°，膝微屈、背打直，正握略宽于肩","先收肩胛，再沿大腿把杠拉向下腹部","顶峰收缩后控制下放"],
+ tips:["核心全程绷紧，像随时准备挨一拳","重量以背部不弓为准","下放时肩胛前送，增加拉伸"],
+ mistakes:["弓腰驼背硬拉","上身越拉越直变成耸肩","猛拉借力"],
+ svg:"st_row",video:"https://search.bilibili.com/all?keyword=杠铃划船教学"},
+/* ---------- 背 · 下背 ---------- */
+{id:"superman",name:"小燕飞",subId:"back_lower",mode:"home",equipment:"徒手",level:"初级",sets:"3 组 × 12-15 次",
+ steps:["俯卧垫上，双臂向前伸直","同时抬起胸口与双腿离地，顶点停 1-2 秒，挤压下背与臀部","缓慢放下还原"],
+ tips:["幅度小而稳，不追求抬得很高","眼看前下方，保持颈部中立","抬起时呼气"],
+ mistakes:["猛甩上去","抬头过高挤压颈椎","下落时直接砸地"],
+ svg:"lie_superman"},
+{id:"good_morning",name:"早安式体前屈",subId:"back_lower",mode:"home",equipment:"徒手",level:"初级",sets:"3 组 × 12-15 次",
+ steps:["直立，双手抱头或交叉于胸前","膝微屈固定，屈髋把躯干向前下方送，臀部向后推，至躯干接近平行地面","收紧臀部与下背，回到直立"],
+ tips:["全程背打直，感觉是折髋而不是弯腰","下放 3 秒，慢速可控","双手不要压头"],
+ mistakes:["弓背","膝盖大幅前移做成了深蹲","速度过快"],
+ svg:"st_goodmorning"},
+{id:"rdl_bb",name:"罗马尼亚硬拉",subId:"back_lower",mode:"gym",equipment:"杠铃",level:"中级",sets:"4 组 × 8-12 次",
+ steps:["站立持杠于大腿前，握距与肩同宽","膝微屈固定，屈髋后推臀，杠贴着腿下滑至腘绳肌明显拉伸（约膝下到小腿中段）","收紧臀部伸髋回到直立"],
+ tips:["杠始终贴着腿走","背打直，眼看前下方","感觉是臀向后推，而不是弯腰向下"],
+ mistakes:["弓背","膝盖过度前移","下放过深导致腰代偿"],
+ svg:"st_hinge"},
+{id:"back_extension",name:"罗马椅背屈伸",subId:"back_lower",mode:"gym",equipment:"罗马椅",level:"初级",sets:"3 组 × 12-15 次",
+ steps:["调垫高至髋部上沿，俯身向下至躯干接近垂直","下背发力抬起躯干，至身体与腿成一条直线，顶峰停 1 秒","缓慢下放"],
+ tips:["抬到身体一条线即可，不要过度后仰","可抱杠铃片增加负重","下放 3 秒"],
+ mistakes:["过度后仰顶腰","甩动借力","垫位过高卡住髋部"],
+ svg:"st_backext"},
+/* ---------- 肩 · 前束 ---------- */
+{id:"raise_front_db",name:"哑铃前平举",subId:"sh_front",mode:"home",equipment:"哑铃",level:"初级",sets:"3 组 × 12-15 次",
+ steps:["直立，哑铃垂于体前、掌心朝后","前束发力把哑铃向前上方举至与肩同高，顶端停 1 秒","缓慢下放还原"],
+ tips:["举到肩高即可，再往上就是斜方肌代偿","可单手交替做，更好控制","核心收紧，身体不后仰"],
+ mistakes:["甩腰借力","举过头顶","下放自由落体"],
+ svg:"stand_frontraise"},
+{id:"pushup_pike",name:"派克俯卧撑",subId:"sh_front",mode:"home",equipment:"徒手",level:"中级",sets:"4 组 × 8-12 次",
+ steps:["俯卧撑起手姿势，臀部抬高，身体成倒 V 形，头顶朝向地面","屈肘下放至头顶接近地面，肘部向后指","肩部发力推起还原"],
+ tips:["臀抬得越高越偏肩部","脚垫高可进一步加大难度","下放时眼看两膝之间"],
+ mistakes:["臀太低做成了普通俯卧撑","肘部外撇过大","塌腰"],
+ svg:"pl_pike"},
+{id:"press_db_shoulder",name:"哑铃推举",subId:"sh_front",mode:"gym",equipment:"哑铃",level:"中级",sets:"4 组 × 8-12 次",
+ steps:["坐于带靠背的凳子（或站姿），哑铃举在耳侧、掌心朝前","垂直向上推至手臂接近伸直、哑铃在头顶上方","缓慢下放回耳侧"],
+ tips:["小臂始终垂直地面","顶端不要耸肩耸到极限","核心收紧，肋骨不外翻"],
+ mistakes:["大重量后仰做成了上斜卧推","下放过低磕到肩","顶端哑铃相撞"],
+ svg:"stand_ohp_db",video:"https://search.bilibili.com/all?keyword=哑铃推举教学"},
+{id:"press_bb_overhead",name:"杠铃推举",subId:"sh_front",mode:"gym",equipment:"杠铃",level:"中级",sets:"4 组 × 8-12 次",
+ steps:["站姿或坐姿，杠置于锁骨上方、握距略宽于肩","略收下巴，垂直向上推过头顶，杠过脸后头回到中立位","缓慢下放回锁骨上方"],
+ tips:["推起时臀腿夹紧，身体稳如桩","杠的轨迹尽量垂直贴近面部","全握，不要空握"],
+ mistakes:["后仰甩腰借力","杠绕脸前划大弧","下放砸到锁骨"],
+ svg:"stand_ohp"},
+/* ---------- 肩 · 中束 ---------- */
+{id:"raise_side_db",name:"哑铃侧平举",subId:"sh_mid",mode:"both",equipment:"哑铃",level:"初级",sets:"4 组 × 12-15 次",
+ steps:["直立，哑铃垂于体侧、肘微屈","中束发力向两侧举起至与肩同高，像倒水一样小指略高","顶端停 1 秒，缓慢下放"],
+ tips:["用肘带动，手只是一个钩子","举到肩高即止","重量轻一点，动作做标准"],
+ mistakes:["耸肩用斜方借力","甩动把哑铃甩起来","举过肩太高"],
+ svg:"stand_latraise",video:"https://search.bilibili.com/all?keyword=哑铃侧平举教学"},
+{id:"raise_side_band",name:"弹力带侧平举",subId:"sh_mid",mode:"home",equipment:"弹力带",level:"初级",sets:"4 组 × 15 次",
+ steps:["双脚踩住弹力带中段，双手握两端垂于体侧","向两侧举至肩高，顶端停 1 秒","缓慢放回"],
+ tips:["弹力带越往上阻力越大，顶端多停一拍","身体直立不晃动","可单手做，更好找发力感"],
+ mistakes:["耸肩","靠惯性甩起","放回过快失去张力"],
+ svg:"stand_latraise"},
+{id:"raise_side_machine",name:"器械侧平举",subId:"sh_mid",mode:"gym",equipment:"侧平举机",level:"初级",sets:"4 组 × 12-15 次",
+ steps:["调座高使转轴对准肩关节，上臂贴住挡垫","向两侧抬臂至肩高，顶峰收缩","控制放回，在接近起点处停住保持张力"],
+ tips:["放回不要到底，保持持续张力","重量轻、次数足","先沉肩再启动"],
+ mistakes:["耸肩","配重片砸落","用爆发力甩起"],
+ svg:"stand_latraise"},
+{id:"raise_side_cable",name:"绳索侧平举",subId:"sh_mid",mode:"gym",equipment:"绳索",level:"中级",sets:"3 组 × 12-15 次/侧",
+ steps:["滑轮调至最低，侧身站立，远侧手握把，手从体前起始","向体侧举至肩高，顶端停 1 秒","控制下放"],
+ tips:["绳索从起始就有张力，全程受力更均匀","身体不侧倒借力","举到肩高即可"],
+ mistakes:["身体大幅侧倾","耸肩","甩动借力"],
+ svg:"stand_latraise_cable"},
+/* ---------- 肩 · 后束 ---------- */
+{id:"revfly_db_rear",name:"俯身哑铃反向飞鸟（后束）",subId:"sh_rear",mode:"home",equipment:"哑铃",level:"初级",sets:"4 组 × 12-15 次",
+ steps:["俯身至躯干接近平行地面（或俯卧在上斜凳上），哑铃垂于肩下","肘微屈固定，向后束方向展开手臂至与背同平面","顶峰挤压肩胛之间，缓慢下放"],
+ tips:["想着肘向后上方抬","重量轻才能真正孤立后束","颈部保持中立"],
+ mistakes:["重量太大做成了划船","弓背","摆动借力"],
+ svg:"st_revfly"},
+{id:"pull_apart_band",name:"弹力带拉开",subId:"sh_rear",mode:"home",equipment:"弹力带",level:"初级",sets:"4 组 × 15-20 次",
+ steps:["双手握弹力带与肩同宽、举在胸前，手臂伸直微屈肘","后束发力把带向两侧拉开，至带子贴到胸口","缓慢放回，保持张力"],
+ tips:["肩胛下沉，不要耸肩","全程手臂角度不变","放回时也要控制"],
+ mistakes:["屈臂用肱二头肌拉","耸肩","放回时弹回去"],
+ svg:"stand_pullapart"},
+{id:"revfly_machine",name:"反向蝴蝶机",subId:"sh_rear",mode:"gym",equipment:"蝴蝶机",level:"初级",sets:"4 组 × 12-15 次",
+ steps:["面朝椅背坐定，调把手使手臂与肩同高","后束发力向后展开双臂，至与躯干在同一平面","顶峰停 1 秒，控制放回"],
+ tips:["胸口贴紧靠垫","用肘引领动作","放回保持张力不砸片"],
+ mistakes:["用大重量靠背阔肌拉","耸肩","动作只做到半程"],
+ svg:"seat_revfly"},
+{id:"face_pull_rope",name:"绳索面拉",subId:"sh_rear",mode:"gym",equipment:"绳索",level:"初级",sets:"4 组 × 12-15 次",
+ steps:["滑轮调至面部同高，双手握绳两端","向后拉至面部两侧，同时外旋手臂使拇指朝后、双肘高抬","顶峰收缩后控制放回"],
+ tips:["终点像展示肱二头肌的姿势","肩胛骨后缩下沉","重量轻一点，动作做标准"],
+ mistakes:["拉向胸口","耸肩","回放失控"],
+ svg:"st_facepull"},
+/* ---------- 手臂 · 肱二头肌 ---------- */
+{id:"curl_db",name:"哑铃弯举",subId:"arm_bi",mode:"home",equipment:"哑铃",level:"初级",sets:"4 组 × 10-12 次",
+ steps:["直立，哑铃垂于体侧、掌心朝前","大臂固定贴住体侧，屈肘把哑铃弯举至肩前","顶峰收缩 1 秒，缓慢下放"],
+ tips:["大臂纹丝不动","下放 3 秒，充分拉伸肱二头肌","可双手交替做"],
+ mistakes:["甩腰摆臂借力","大臂前后摆动","下放到一半就停"],
+ svg:"stand_curl",video:"https://search.bilibili.com/all?keyword=哑铃弯举教学"},
+{id:"curl_band",name:"弹力带弯举",subId:"arm_bi",mode:"home",equipment:"弹力带",level:"初级",sets:"4 组 × 12-15 次",
+ steps:["踩住弹力带，双手握两端、掌心朝前","大臂固定，屈肘弯举至肩前","顶峰收缩，控制放回"],
+ tips:["顶端阻力最大，多挤 1 秒","手腕中立不上翘","身体不晃动"],
+ mistakes:["大臂前移","甩动借力","放回过快"],
+ svg:"stand_curl"},
+{id:"curl_bb",name:"杠铃弯举",subId:"arm_bi",mode:"gym",equipment:"杠铃",level:"初级",sets:"4 组 × 8-12 次",
+ steps:["直立，反握杠铃与肩同宽，大臂贴体侧固定","屈肘弯举至胸前，顶峰收缩","缓慢下放至手臂接近伸直"],
+ tips:["手腕保持中立不后折","下放充分拉伸肱二头肌","重量以不晃腰为准"],
+ mistakes:["后仰甩腰","大臂前摆","只做半程"],
+ svg:"stand_curl_bb"},
+{id:"curl_preacher_db",name:"哑铃斜托弯举",subId:"arm_bi",mode:"gym",equipment:"哑铃+斜托凳",level:"中级",sets:"3 组 × 10-12 次/侧",
+ steps:["单臂搁在斜托板上，腋下贴紧板沿","持哑铃缓慢下放至接近伸直（保留一点屈肘）","弯举至肩前，顶峰收缩"],
+ tips:["下放是重点，3 秒离心","顶端不要松掉张力","两侧次数一致"],
+ mistakes:["下放到完全伸直伤肘","腋下离开托板","借力甩起"],
+ svg:"seat_preacher"},
+{id:"curl_cable",name:"绳索弯举",subId:"arm_bi",mode:"gym",equipment:"绳索",level:"初级",sets:"3 组 × 12-15 次",
+ steps:["滑轮调至最低，握直杆或绳把","大臂固定体侧，屈肘弯举，用绳把时顶端可略向外撇","顶峰收缩，控制下放"],
+ tips:["绳索全程有张力，顶端别松","身体直立","手腕中立"],
+ mistakes:["大臂摆动","后仰借力","配重片砸落"],
+ svg:"stand_curl_cable"},
+/* ---------- 手臂 · 肱三头肌 ---------- */
+{id:"dip_bench",name:"凳上臂屈伸",subId:"arm_tri",mode:"home",equipment:"凳子",level:"中级",sets:"4 组 × 10-12 次",
+ steps:["双手撑在身后凳沿、手指朝前，腿向前伸、脚跟着地","屈肘下放身体至大臂接近平行地面","肱三头发力把身体撑起"],
+ tips:["身体贴近凳子上下移动，不要向前移","肩下沉不耸","脚前移或垫高可加大难度"],
+ mistakes:["身体离凳太远，肩关节压力大","下放时耸肩","只做半程"],
+ svg:"st_benchdip"},
+{id:"ext_overhead_db",name:"哑铃颈后臂屈伸",subId:"arm_tri",mode:"home",equipment:"哑铃",level:"中级",sets:"3 组 × 10-12 次",
+ steps:["双手合握一只哑铃举过头顶","大臂固定贴住耳朵，屈肘把哑铃放至颈后","肱三头发力举回起始位"],
+ tips:["大臂夹紧耳朵不向外张","下放 3 秒，充分感受拉伸","可坐姿做，更稳"],
+ mistakes:["大臂外张","下放失控砸到头","弓腰"],
+ svg:"stand_tri_over"},
+{id:"pushdown_cable",name:"绳索下压",subId:"arm_tri",mode:"gym",equipment:"绳索",level:"初级",sets:"4 组 × 10-12 次",
+ steps:["滑轮调至最高，握直杆或绳把，大臂夹紧体侧固定","从屈肘 90° 起始，肱三头发力下压至手臂伸直","顶峰收缩后控制回放"],
+ tips:["全程只有小臂在动","回放时不要让肘被重量抬起来","身体微前倾稳住"],
+ mistakes:["大臂前后摆动","用身体压上去借力","回放过快"],
+ svg:"stand_pushdown"},
+{id:"press_close_grip",name:"窄距卧推",subId:"arm_tri",mode:"gym",equipment:"杠铃",level:"中级",sets:"4 组 × 8-10 次",
+ steps:["躺平凳，握距与肩同宽或略窄","下放至杠触下胸，双肘贴近体侧","肱三头发力推起"],
+ tips:["握距不必过窄，肩宽即可，否则手腕难受","肘始终贴近身体","重量比常规卧推轻"],
+ mistakes:["握得过窄伤手腕","肘外张变成了胸推","弹胸借力"],
+ svg:"lie_bench"},
+{id:"skullcrusher",name:"仰卧杠铃臂屈伸",subId:"arm_tri",mode:"gym",equipment:"曲杆杠铃",level:"中级",sets:"3 组 × 10-12 次",
+ steps:["仰卧，持曲杆于头顶正上方","大臂垂直固定，屈肘把杠放向额头上方","肱三头发力举回"],
+ tips:["落点在额头略上方，不要真的砸向脸","大臂不动","下放 3 秒"],
+ mistakes:["大臂晃动","落点太低危险","肘外张"],
+ svg:"lie_skull"},
+/* ---------- 手臂 · 小臂 ---------- */
+{id:"wrist_curl_db",name:"哑铃腕弯举",subId:"arm_fore",mode:"home",equipment:"哑铃",level:"初级",sets:"3 组 × 15-20 次",
+ steps:["坐姿，前臂搁在大腿上、手腕悬出膝外，掌心向上持哑铃","屈腕把哑铃卷起，顶峰收缩","缓慢下放至手指充分伸展"],
+ tips:["幅度走满全程","重量轻、次数多","前臂贴紧大腿不抬起"],
+ mistakes:["前臂离开大腿借力","重量过大","只做半程"],
+ svg:"seat_wrist"},
+{id:"wrist_curl_bb",name:"杠铃腕弯举",subId:"arm_fore",mode:"gym",equipment:"杠铃",level:"初级",sets:"3 组 × 15-20 次",
+ steps:["前臂搁在平凳上、双手悬出凳沿，掌心向上持杠","屈腕卷起杠铃，顶峰停 1 秒","缓慢下放到底"],
+ tips:["全程慢速","可翻正手再做一组练伸肌","前臂全程贴凳"],
+ mistakes:["甩动借力","前臂抬起","下放不到位"],
+ svg:"seat_wrist_bb"},
+{id:"farmer_walk",name:"农夫行走",subId:"arm_fore",mode:"both",equipment:"哑铃/壶铃",level:"中级",sets:"3 组 × 走 30-40 米",
+ steps:["双手各提一只大重量哑铃或壶铃，站直收紧核心","保持躯干稳定，快步走 30-40 米","稳稳放下后休息"],
+ tips:["肩胛下沉不耸肩","步幅小、频率快","在握力耗尽前结束"],
+ mistakes:["弓腰驼背走","身体左右晃","重量大到握不住砸脚"],
+ svg:"stand_farmer"},
+/* ---------- 腿 · 股四头肌 ---------- */
+{id:"squat_bw",name:"徒手深蹲",subId:"leg_quad",mode:"home",equipment:"徒手",level:"初级",sets:"4 组 × 15-20 次",
+ steps:["站距与肩同宽、脚尖略外八","屈髋屈膝同步下蹲，至大腿接近平行地面，膝与脚尖同向","脚跟发力蹬起还原"],
+ tips:["下蹲吸气、起身呼气","全程背打直、胸口前挺","可扶椅背找平衡"],
+ mistakes:["膝盖内扣","脚跟抬起","只蹲四分之一深度"],
+ svg:"st_squat",video:"https://search.bilibili.com/all?keyword=徒手深蹲教学"},
+{id:"split_squat_bg",name:"保加利亚分腿蹲",subId:"leg_quad",mode:"home",equipment:"徒手",level:"中级",sets:"4 组 × 10-12 次/侧",
+ steps:["后脚脚背搭在凳面或床沿，前脚向前迈出一步","垂直下蹲至前腿大腿接近平行地面，膝不内扣","前脚发力蹬起还原"],
+ tips:["躯干微前倾更偏臀，直立更偏股四头肌","下蹲 3 秒，控制离心","两侧次数保持一致"],
+ mistakes:["膝内扣","前脚站距过近导致膝盖不适","身体后仰借力"],
+ svg:"st_bulgarian"},
+{id:"lunge",name:"箭步蹲",subId:"leg_quad",mode:"home",equipment:"徒手",level:"初级",sets:"4 组 × 12 次/侧",
+ steps:["直立，向前跨出一大步","垂直下蹲至前后膝均约 90°，后膝轻触地面前停住","前脚发力蹬回起始位"],
+ tips:["步子要够大，重心垂直上下","躯干保持直立","可双手持哑铃增加负重"],
+ mistakes:["步子太小导致膝前移过多","膝内扣","上身前倾借力"],
+ svg:"st_lunge"},
+{id:"squat_bb",name:"杠铃深蹲",subId:"leg_quad",mode:"gym",equipment:"杠铃",level:"中级",sets:"4 组 × 8-10 次",
+ steps:["杠置于斜方肌上（高杠位），站距与肩同宽、脚尖外八","屈髋屈膝下蹲至大腿低于水平，膝随脚尖方向打开","蹬地起身，髋膝同步伸展"],
+ tips:["全程核心绷紧、背打直","下蹲吸气憋住、起身呼气","膝可以过脚尖，但绝不能内扣"],
+ mistakes:["弓腰做成早安式起身","膝内扣","脚跟离地"],
+ svg:"st_squat_bb",video:"https://search.bilibili.com/all?keyword=杠铃深蹲教学"},
+{id:"leg_press",name:"腿举",subId:"leg_quad",mode:"gym",equipment:"腿举机",level:"初级",sets:"4 组 × 10-12 次",
+ steps:["背靠坐垫，双脚踩踏板与肩同宽、位置适中","解锁后缓慢下放至膝约 90°，臀部不离开坐垫","蹬起至膝接近伸直（保留微屈不锁死）"],
+ tips:["脚位偏高更偏臀和腘绳，脚位偏低更偏股四","腰臀全程贴住坐垫","蹬起后不要锁死膝盖"],
+ mistakes:["下放过深导致臀离垫伤腰","膝内扣","顶端锁膝"],
+ svg:"st_legpress"},
+{id:"leg_extension",name:"腿屈伸",subId:"leg_quad",mode:"gym",equipment:"腿屈伸机",level:"初级",sets:"3 组 × 12-15 次",
+ steps:["调靠背使转轴对准膝关节，挡垫在脚踝前方","股四头肌发力抬起小腿至膝接近伸直，顶峰收缩 1 秒","缓慢下放还原"],
+ tips:["顶峰用力挤压股四头肌","下放 3 秒","重量以全程能控制为准"],
+ mistakes:["借力甩上去","下放砸落","重量过大伤髌腱"],
+ svg:"seat_legext"},
+/* ---------- 腿 · 腘绳肌+臀 ---------- */
+{id:"glute_bridge",name:"臀桥",subId:"leg_ham",mode:"home",equipment:"徒手",level:"初级",sets:"4 组 × 15 次",
+ steps:["仰卧屈膝、脚踩地与髋同宽","臀肌发力把髋部抬起，至肩髋膝成一条直线，顶峰夹臀 2 秒","缓慢下放还原"],
+ tips:["顶峰不要过度顶腰","用脚跟发力","手可放体侧或抱胸加大难度"],
+ mistakes:["用腰顶起而不是用臀","顶峰拱腰","下放直接砸垫"],
+ svg:"lie_bridge"},
+{id:"rdl_db",name:"哑铃罗马尼亚硬拉",subId:"leg_ham",mode:"home",equipment:"哑铃",level:"中级",sets:"4 组 × 10-12 次",
+ steps:["双手持哑铃置于大腿前","膝微屈固定，屈髋后推臀，哑铃贴腿下滑至小腿中段","臀与腘绳肌发力伸髋回位"],
+ tips:["感觉臀部在往后顶墙","背打直","下放 3 秒"],
+ mistakes:["弓背","膝前移做成了深蹲","下放过深导致腰代偿"],
+ svg:"st_hinge_db"},
+{id:"nordic_curl",name:"北欧腿弯举（辅助）",subId:"leg_ham",mode:"home",equipment:"徒手",level:"中级",sets:"3 组 × 5-8 次",
+ steps:["跪姿，脚踝请同伴按住或勾在稳固家具下方","身体从膝盖以上保持一条直线，缓慢向前倾下放，双手撑地缓冲","借力推回起点"],
+ tips:["重点是 3-5 秒的离心下放","髋部不折叠","下放不了就先做半程"],
+ mistakes:["折髋坐了下去","下放失控拍在地上","脚踝没固定住"],
+ svg:"st_nordic"},
+{id:"leg_curl",name:"俯卧腿弯举",subId:"leg_ham",mode:"gym",equipment:"腿弯举机",level:"初级",sets:"4 组 × 10-12 次",
+ steps:["俯卧，挡垫在小腿后侧、转轴对准膝关节","腘绳肌发力勾腿至挡垫接近臀部","顶峰收缩后缓慢放回"],
+ tips:["髋部贴垫不翘起","顶峰挤 1 秒","下放 3 秒"],
+ mistakes:["甩动借力","髋部翘起","配重片砸落"],
+ svg:"lie_legcurl"},
+{id:"deadlift_bb",name:"杠铃硬拉",subId:"leg_ham",mode:"gym",equipment:"杠铃",level:"中级",sets:"4 组 × 6-8 次",
+ steps:["杠在脚背正上方，站距与髋同宽，屈髋握杠（与肩同宽）","背打直、挺胸、臀位适中，蹬地伸髋把杠贴着腿拉起至身体直立","屈髋缓慢下放"],
+ tips:["杠全程贴腿","拉起靠蹬地，不是靠腰拉","核心憋紧再启动"],
+ mistakes:["弓腰硬拉","杠离身体太远","顶端后仰顶腰"],
+ svg:"st_deadlift",video:"https://search.bilibili.com/all?keyword=杠铃硬拉教学"},
+{id:"hip_thrust",name:"杠铃臀推",subId:"leg_ham",mode:"gym",equipment:"杠铃+平凳",level:"中级",sets:"4 组 × 8-12 次",
+ steps:["上背靠在凳沿，杠置于髋部（垫厚垫保护）","脚距与髋同宽、小腿接近垂直地面，臀发力把髋顶起至肩髋膝一条直线，顶峰夹臀 2 秒","缓慢下放还原"],
+ tips:["下巴微收，眼看前方","顶峰不要过度顶腰","脚位调到顶点时小腿垂直"],
+ mistakes:["用腰顶起","脚太靠前偏腘绳、太后偏股四","只做半程"],
+ svg:"lie_hipthrust"},
+/* ---------- 腿 · 小腿 ---------- */
+{id:"calf_raise_stand",name:"站姿提踵",subId:"leg_calf",mode:"home",equipment:"徒手",level:"初级",sets:"4 组 × 15-20 次",
+ steps:["前脚掌站在台阶边缘，脚跟悬空","缓慢下放脚跟至小腿充分拉伸","小腿发力提踵至最高点，顶峰停 1 秒"],
+ tips:["全程慢速，顶端和底端各停一拍","可扶墙保持平衡","膝保持伸直"],
+ mistakes:["快速弹跳","幅度只做一半","屈膝做"],
+ svg:"st_calf"},
+{id:"calf_raise_single",name:"单腿提踵",subId:"leg_calf",mode:"home",equipment:"徒手",level:"中级",sets:"4 组 × 10-12 次/侧",
+ steps:["单脚前脚掌站台阶边，另一脚勾起","同站姿提踵要领，单侧完成下放与提踵","顶峰停 1 秒，两侧次数一致"],
+ tips:["一手扶墙保持平衡","下放充分拉伸","顶峰停 1 秒"],
+ mistakes:["借力弹跳","脚踝内外翻","下放不到位"],
+ svg:"st_calf"},
+{id:"calf_raise_seat_home",name:"坐姿提踵（膝上负重）",subId:"leg_calf",mode:"home",equipment:"哑铃",level:"初级",sets:"4 组 × 15-20 次",
+ steps:["坐姿，前脚掌垫高（书本或砖块），哑铃放在膝上靠近膝盖处","下放脚跟至充分拉伸","提踵至最高点，顶峰停 1 秒"],
+ tips:["坐姿更偏比目鱼肌","哑铃下垫毛巾防滑","慢速走完全程"],
+ mistakes:["哑铃压在膝盖正中压痛","弹跳式发力","幅度不足"],
+ svg:"seat_calf"},
+{id:"calf_raise_machine_stand",name:"站姿提踵机",subId:"leg_calf",mode:"gym",equipment:"提踵机",level:"初级",sets:"4 组 × 10-15 次",
+ steps:["肩垫扛在肩上，前脚掌踩踏板边缘","下放脚跟至充分拉伸","提踵至最高，顶峰停 1 秒后缓慢下放"],
+ tips:["身体直立不前后晃","底端拉伸 1 秒再启动","膝保持伸直"],
+ mistakes:["屈膝借力","只做半程","下放过快"],
+ svg:"st_calf_machine"},
+{id:"calf_raise_machine_seat",name:"坐姿提踵机",subId:"leg_calf",mode:"gym",equipment:"提踵机",level:"初级",sets:"4 组 × 12-20 次",
+ steps:["调垫压在大腿下端，前脚掌踩踏板","下放脚跟至充分拉伸","提踵至最高，顶峰停 1 秒"],
+ tips:["主练比目鱼肌，可与站姿提踵搭配","全程慢速","顶端多停一拍"],
+ mistakes:["垫位压住膝盖","弹跳式","幅度不足"],
+ svg:"seat_calf"},
+{id:"calf_raise_legpress",name:"腿举提踵",subId:"leg_calf",mode:"gym",equipment:"腿举机",level:"初级",sets:"3 组 × 15-20 次",
+ steps:["躺于腿举机，双腿伸直，前脚掌踩踏板下沿","脚踝发力把踏板推远，至脚尖充分绷直","缓慢回放至小腿充分拉伸"],
+ tips:["腿保持伸直微屈、不锁死","全程只有踝关节在动","慢速控制"],
+ mistakes:["屈膝蹬踏做成了腿举","回放失控","幅度不足"],
+ svg:"st_legpress"},
+/* ---------- 核心 · 上腹 ---------- */
+{id:"crunch",name:"卷腹",subId:"core_up",mode:"home",equipment:"徒手",level:"初级",sets:"4 组 × 15-20 次",
+ steps:["仰卧屈膝踩地，手轻扶耳侧或交叉于胸前","上腹发力把肩胛骨卷离地面，下背始终贴垫","顶峰停 1 秒，缓慢下放"],
+ tips:["想象把肋骨卷向骨盆","手不抱头拉脖子","卷起时呼气"],
+ mistakes:["抱头拽脖子","整个背部坐起做成仰卧起坐","下放砸垫"],
+ svg:"lie_crunch",video:"https://search.bilibili.com/all?keyword=卷腹正确做法"},
+{id:"leg_raise_bent",name:"仰卧屈膝举腿",subId:"core_up",mode:"home",equipment:"徒手",level:"初级",sets:"4 组 × 12-15 次",
+ steps:["仰卧，手放臀下或体侧，屈膝 90° 抬起双腿","腹部发力把膝卷向胸口，臀部略离地","缓慢下放回起始位"],
+ tips:["下背全程贴垫","下放控制 3 秒","全程用腹部发力，不用惯性"],
+ mistakes:["甩腿","下背离地弓起","下放时腿落地休息"],
+ svg:"lie_revcrunch"},
+{id:"crunch_cable",name:"绳索卷腹",subId:"core_up",mode:"gym",equipment:"绳索",level:"中级",sets:"4 组 × 12-15 次",
+ steps:["面对高位滑轮跪下，绳把固定在头后","上腹发力把躯干卷下去，想象肋骨压向骨盆","顶峰收缩后缓慢回放"],
+ tips:["是卷腹不是折髋，髋部固定不动","重量循序渐进","回放时感受腹部拉伸"],
+ mistakes:["屈髋用髋部发力","手臂往下拉","回放失控"],
+ svg:"kneel_crunch"},
+{id:"crunch_machine",name:"器械卷腹",subId:"core_up",mode:"gym",equipment:"卷腹机",level:"初级",sets:"3 组 × 12-15 次",
+ steps:["调座高与配重，上背靠垫、手握把","腹部发力卷下上身，顶峰收缩","控制回放"],
+ tips:["意念卷腹而不是用体重压","回放保持张力","重量以能标准完成为准"],
+ mistakes:["用体重往下压","回放砸片","只做半程"],
+ svg:"seat_crunch"},
+/* ---------- 核心 · 下腹 ---------- */
+{id:"leg_raise",name:"仰卧举腿",subId:"core_low",mode:"home",equipment:"徒手",level:"中级",sets:"4 组 × 10-15 次",
+ steps:["仰卧，手放臀下，双腿伸直微屈","下腹发力抬腿至与地面接近垂直","缓慢下放至离地一拳处悬停"],
+ tips:["下背贴垫是关键，下放越低越难","下放 3 秒","腿不落地，保持张力"],
+ mistakes:["下背拱起","甩腿借力","腿落地休息"],
+ svg:"lie_legraise"},
+{id:"reverse_crunch",name:"反向卷腹",subId:"core_low",mode:"home",equipment:"徒手",level:"初级",sets:"4 组 × 12-15 次",
+ steps:["仰卧屈膝抬腿 90°，手压地面固定","下腹发力把臀部卷离地面、膝卷向胸口","顶峰收缩后缓慢下放"],
+ tips:["是卷臀不是抬腿","下放时臀轻触地面即起","卷起时呼气"],
+ mistakes:["甩腿靠惯性","臀抬太高用手推","下放砸地"],
+ svg:"lie_revcrunch"},
+{id:"leg_raise_hanging",name:"悬垂举腿",subId:"core_low",mode:"gym",equipment:"单杠",level:"中级",sets:"4 组 × 10-12 次",
+ steps:["正握悬垂，沉肩保持稳定","下腹发力抬腿（直腿或屈膝）至与躯干成 90° 或更高","缓慢下放，身体不晃动"],
+ tips:["先学会稳定悬垂不摆动","屈膝版更容易上手","下放 3 秒"],
+ mistakes:["前后摆动借力","耸肩","下放甩落"],
+ svg:"st_hanglegra"},
+{id:"reverse_crunch_decline",name:"下斜反向卷腹",subId:"core_low",mode:"gym",equipment:"下斜凳",level:"中级",sets:"3 组 × 12-15 次",
+ steps:["躺于下斜凳（头高脚低），双手抓头后凳沿固定","屈膝 90° 起始，下腹发力卷臀离地、膝向胸口","缓慢下放"],
+ tips:["下斜角度越大越难","下放时臀轻触凳面即起","全程控制不甩"],
+ mistakes:["甩腿借力","手拉凳沿抬头","下放砸凳"],
+ svg:"lie_revcrunch"},
+/* ---------- 核心 · 侧腹 ---------- */
+{id:"plank_side",name:"侧平板支撑",subId:"core_side",mode:"home",equipment:"徒手",level:"初级",sets:"3 组 × 每侧 20-40 秒",
+ steps:["侧卧，前臂撑地、肘在肩正下方，双脚叠放","髋部抬起使身体成一条直线，保持稳定","到时间后换侧"],
+ tips:["髋部向前推，不向后坐","肩上顶不耸肩","无法保持就先屈膝做"],
+ mistakes:["髋部下沉","身体前倾转体","憋气"],
+ svg:"pl_sideplank"},
+{id:"russian_twist",name:"俄罗斯转体",subId:"core_side",mode:"home",equipment:"徒手",level:"初级",sets:"3 组 × 20 次（左右各算 1 次）",
+ steps:["坐姿，上身后仰约 45°、脚离地或轻触地","双手合十，腹斜肌发力转体，手交替触体侧地面","左右匀速交替"],
+ tips:["转体靠躯干旋转，不是手左右挥","下背保持中立不弓","慢速控制"],
+ mistakes:["只甩手不转肩","弓背","憋气"],
+ svg:"seat_twist"},
+{id:"side_crunch_lying",name:"侧卧卷腹",subId:"core_side",mode:"home",equipment:"徒手",level:"初级",sets:"3 组 × 12-15 次/侧",
+ steps:["侧卧，双腿微屈叠放，上侧手扶耳侧","侧腹发力把肩卷向髋部，顶峰收缩","缓慢下放，完成后换侧"],
+ tips:["幅度小但挤压感要强","两侧次数一致","卷起时呼气"],
+ mistakes:["用手拽头","动作过大变成起身","甩动借力"],
+ svg:"lie_sidecrunch"},
+{id:"bend_cable_side",name:"绳索侧屈",subId:"core_side",mode:"gym",equipment:"绳索",level:"中级",sets:"3 组 × 12-15 次/侧",
+ steps:["侧对低位滑轮站立，远侧手握把垂于体侧","侧腹发力向对侧屈体，再控制被缓慢拉回","顶峰收缩，两侧组数一致"],
+ tips:["只有躯干侧屈，手臂不发力拉","重量宁轻勿重","身体不前后转动"],
+ mistakes:["用手臂拉","身体前后转","重量过大"],
+ svg:"stand_sidebend"},
+{id:"russian_twist_weighted",name:"负重俄罗斯转体",subId:"core_side",mode:"gym",equipment:"哑铃/杠铃片",level:"中级",sets:"3 组 × 16-20 次",
+ steps:["坐姿后仰约 45°，双手持哑铃或杠铃片于胸前","转体把负重交替送向体侧，躯干充分旋转","匀速控制，左右交替"],
+ tips:["负重不宜大，5-10kg 足够","脚可踩地更稳","全程腹斜肌发力"],
+ mistakes:["只动手臂","弓背","憋气快速甩"],
+ svg:"seat_twist"},
+/* ---------- 体态矫正动作 ---------- */
+{id:"chin_tuck",name:"下巴回收",subId:null,postureOnly:true,mode:"both",equipment:"徒手",level:"初级",sets:"每天 3 组 × 10 次",
+ steps:["坐直或站直，眼看正前方","下巴水平向后收，像故意挤出双下巴，保持 5 秒","放松还原，重复"],
+ tips:["是水平后移，不是低头或仰头","可用一根手指轻推下巴辅助","组间放松颈前肌肉"],
+ mistakes:["做成了低头或仰头","耸肩","憋气"],
+ svg:"po_chintuck"},
+{id:"wall_stand",name:"靠墙站姿",subId:null,postureOnly:true,mode:"both",equipment:"墙面",level:"初级",sets:"每天 2 组 × 60 秒",
+ steps:["后脑、肩胛、臀部、脚跟贴墙站立","收下巴，手臂自然下垂，核心微收","保持 60 秒，均匀呼吸"],
+ tips:["后脑贴墙时保持下巴水平后收","呼吸均匀不要憋","每天可多次练习"],
+ mistakes:["腰离墙过大","仰头贴墙","憋气"],
+ svg:"po_wallstand"},
+{id:"scm_stretch",name:"胸锁乳突肌拉伸",subId:null,postureOnly:true,mode:"both",equipment:"徒手",level:"初级",sets:"每天 2 组 × 每侧 30 秒",
+ steps:["坐直，一手压住对侧锁骨固定","头向对侧侧屈，再缓慢转向斜上方，感受颈前侧拉伸","保持 30 秒后换侧"],
+ tips:["力度要轻，3-4 成力即可","被拉伸一侧的肩下沉","呼吸保持放松"],
+ mistakes:["猛力拉扯","耸肩","憋气"],
+ svg:"po_neckstretch"},
+{id:"tongue_posture",name:"舌顶上颚训练",subId:null,postureOnly:true,mode:"both",equipment:"徒手",level:"初级",sets:"全天多次 × 每次 30 秒以上",
+ steps:["闭上嘴唇，舌尖抵在上门牙后方的上颚","整片舌面贴住上颚，保持鼻呼吸","保持 30 秒以上，全天多次练习"],
+ tips:["牙齿轻离不咬紧，下巴放松","可在看手机时顺便练习（同时抬头）","长期坚持帮助改善颈前姿势"],
+ mistakes:["只顶舌尖、舌面悬空","咬牙用力","憋气"],
+ svg:"po_tongue"},
+{id:"doorway_stretch",name:"门框胸肌拉伸",subId:null,postureOnly:true,mode:"both",equipment:"门框",level:"初级",sets:"每天 2 组 × 每侧 30 秒",
+ steps:["前臂贴住门框、肘与肩同高，弓箭步站稳","身体缓慢向前送，感受胸前侧拉伸","保持 30 秒后换侧"],
+ tips:["肩下沉不耸","拉伸感 3-4 分即可，不要硬顶","肘高于肩时更偏胸下束"],
+ mistakes:["猛冲式拉伸","耸肩","弓腰向前顶"],
+ svg:"po_doorstretch"},
+{id:"row_band_posture",name:"弹力带划船",subId:null,postureOnly:true,mode:"both",equipment:"弹力带",level:"初级",sets:"每天 3 组 × 15 次",
+ steps:["坐姿或站姿，弹力带固定在前方，双手握带","先肩胛骨后缩夹紧，再屈肘把带拉向腹部","顶峰收缩 2 秒，缓慢放回"],
+ tips:["重点是肩胛骨像在夹一支铅笔","躯干直立不后仰","全程慢速"],
+ mistakes:["只弯手臂、肩胛不动","耸肩","放回弹回去"],
+ svg:"seat_row"},
+{id:"ytwl",name:"YTWL",subId:null,postureOnly:true,mode:"both",equipment:"徒手",level:"初级",sets:"每天 2 组 × 各字母 8 次",
+ steps:["俯卧（或俯身），拇指朝上","双臂依次举成 Y、T、W、L 四个字母形状，每个位置停 2 秒","全程肩胛下沉，缓慢切换"],
+ tips:["动作慢而稳，感受肩胛骨周围发力","腰酸就趴在斜凳上做","幅度以不耸肩为准"],
+ mistakes:["耸肩","甩动","腰部代偿把上半身抬很高"],
+ svg:"po_ytwl"},
+{id:"wall_angel",name:"靠墙天使",subId:null,postureOnly:true,mode:"both",equipment:"墙面",level:"初级",sets:"每天 2 组 × 10 次",
+ steps:["后脑、背、臀贴墙，收下巴","双臂贴墙成 W 形，沿墙缓慢上滑成 Y 形，再滑回","全程手臂与手背尽量贴墙"],
+ tips:["贴不住墙是正常的，尽力即可","腰不拱起","呼吸均匀"],
+ mistakes:["腰离墙拱起","手臂离墙太远","速度过快"],
+ svg:"po_wallangel"},
+{id:"hip_flexor_stretch",name:"髋屈肌拉伸",subId:null,postureOnly:true,mode:"both",equipment:"瑜伽垫",level:"初级",sets:"每天 2 组 × 每侧 40 秒",
+ steps:["弓箭步，后膝跪在垫上","先骨盆后倾（收腹夹臀），再把身体缓慢前移","感受后脚一侧髋前侧拉伸，保持 40 秒换侧"],
+ tips:["关键是先骨盆后倾再前移，否则拉错位置","同侧手举过头顶可加深","呼吸放松"],
+ mistakes:["挺着腰前移（拉错位置）","前膝内扣","憋气"],
+ svg:"po_hipflexor"},
+{id:"glute_bridge_p",name:"臀桥（矫正版）",subId:null,postureOnly:true,mode:"both",equipment:"徒手",level:"初级",sets:"每天 2 组 × 12 次",
+ steps:["仰卧屈膝，先做骨盆后倾让腰贴住垫面","臀部发力抬髋至肩髋膝一条直线，顶峰夹臀 3 秒","逐节脊椎缓慢落回垫面"],
+ tips:["顶峰不要顶腰","想象用臀把骨盆卷起来","下放越慢越好"],
+ mistakes:["腰代偿顶起","顶峰拱腰","下放砸垫"],
+ svg:"lie_bridge"},
+{id:"dead_bug",name:"死虫式",subId:null,postureOnly:true,mode:"both",equipment:"瑜伽垫",level:"初级",sets:"每天 2 组 × 每侧 10 次",
+ steps:["仰卧，双臂指向天花板，双腿屈膝 90° 抬起","腰部贴紧地面，缓慢下放对侧手臂与腿至接近地面","回位后换另一侧"],
+ tips:["全程腰贴垫是灵魂，贴不住就减小幅度","下放时呼气","越慢越好"],
+ mistakes:["腰离地弓起","手脚快速甩动","憋气"],
+ svg:"lie_deadbug"},
+{id:"stomach_vacuum",name:"真空腹",subId:null,postureOnly:true,mode:"both",equipment:"徒手",level:"初级",sets:"每天 3 组 × 15-20 秒",
+ steps:["空腹，站姿或跪姿","彻底呼气后屏息，把肚脐向脊柱方向吸进去，腹部内凹","保持 15-20 秒后放松吸气"],
+ tips:["先呼尽气再吸腹","早晨空腹效果最好","初期可对着镜子观察腹部内凹"],
+ mistakes:["没呼气就吸腹","憋到头晕（应缩短时间）","弓背"],
+ svg:"po_vacuum"},
+{id:"plank",name:"平板支撑",subId:null,postureOnly:true,mode:"both",equipment:"瑜伽垫",level:"初级",sets:"每天 3 组 × 30-60 秒",
+ steps:["前臂撑地、肘在肩正下方，身体成一条直线","核心与臀部收紧，均匀呼吸保持","到时间后缓慢放下"],
+ tips:["骨盆微微后倾更护腰","看地面保持颈部中立","动作质量大于时长"],
+ mistakes:["塌腰或撅臀","憋气","耸肩"],
+ svg:"pl_plank"},
+{id:"plank_side_p",name:"侧平板（矫正版）",subId:null,postureOnly:true,mode:"both",equipment:"瑜伽垫",level:"初级",sets:"每天 2 组 × 每侧 20-40 秒",
+ steps:["前臂侧撑，肘在肩正下方","髋部向上顶起，身体成一条直线保持","换侧进行"],
+ tips:["髋向前上方顶","上侧手可叉腰","做不稳先屈膝做"],
+ mistakes:["髋下沉","转体","憋气"],
+ svg:"pl_sideplank"}
+];
+const EX_BY_ID = {}; EXERCISES.forEach(e=>EX_BY_ID[e.id]=e);
+
+/* ================= 体态问题 ================= */
+const POSTURES = [
+{id:"forward_head",name:"头前伸 / 下颚线模糊",signs:"下巴前探、颈前赘肉明显、下颚线模糊，侧面看耳朵在肩膀前方",
+ cause:"长期低头看手机电脑，颈前深层肌无力、颈前侧肌肉紧张缩短，头部被拉向前方。",
+ exerciseIds:["chin_tuck","wall_stand","scm_stretch","tongue_posture"]},
+{id:"rounded_shoulder",name:"圆肩驼背",signs:"肩膀前扣、含胸、后背变厚，侧面看肩峰明显跑到身体前方",
+ cause:"胸前侧肌肉紧张缩短，加上菱形肌、中下斜方等上背肌群无力，肩胛骨被拉向前。",
+ exerciseIds:["doorway_stretch","row_band_posture","ytwl","wall_angel"]},
+{id:"anterior_pelvic",name:"骨盆前倾",signs:"小腹前凸、屁股后翘、腰曲过大、久站容易腰酸",
+ cause:"髋屈肌与腰部竖脊肌紧张，腹肌与臀肌无力，骨盆被拉向前下方倾斜。",
+ exerciseIds:["hip_flexor_stretch","glute_bridge_p","dead_bug"]},
+{id:"loose_core",name:"腰腹松弛",signs:"腰腹两侧松垮、核心收不紧、腰围一直减不下去",
+ cause:"腹横肌等深层核心薄弱、日常缺少核心激活，常伴随体脂偏高。",
+ exerciseIds:["stomach_vacuum","plank","plank_side_p"]}
+];
+
+/* ================= 食物库（每 100g 营养） ================= */
+const FOODS = [
+{id:"milk",name:"牛奶",kcal:54,protein:3,presets:[{label:"1 杯 ≈250g",grams:250}]},
+{id:"roubao",name:"肉包",kcal:230,protein:8.4,presets:[{label:"1 个 ≈90g",grams:90}]},
+{id:"egg",name:"鸡蛋",kcal:144,protein:13.3,presets:[{label:"1 个 ≈60g",grams:60}]},
+{id:"rice",name:"米饭（蒸）",kcal:116,protein:2.6,presets:[{label:"1 碗 ≈200g",grams:200}]},
+{id:"chicken_leg",name:"鸡腿（熟，可食部）",kcal:194,protein:26,presets:[{label:"1 个 ≈120g",grams:120}]},
+{id:"nuts_mixed",name:"混合坚果",kcal:600,protein:20,presets:[{label:"1 小把 ≈30g",grams:30}]},
+{id:"walnut",name:"核桃仁",kcal:646,protein:14.9},
+{id:"whey",name:"蛋白粉",kcal:380,protein:75,presets:[{label:"1 勺 ≈30g",grams:30}]},
+{id:"creatine",name:"肌酸",kcal:0,protein:0,presets:[{label:"1 勺 ≈5g",grams:5}]},
+{id:"greens",name:"青菜（过水）",kcal:15,protein:1.5},
+{id:"chicken_breast",name:"鸡胸肉（生）",kcal:118,protein:24.6},
+{id:"beef_lean",name:"牛肉（瘦）",kcal:106,protein:20.2},
+{id:"fish",name:"鱼肉（鲈鱼）",kcal:105,protein:18.6},
+{id:"shrimp",name:"虾",kcal:93,protein:18.6},
+{id:"tofu",name:"豆腐",kcal:82,protein:8.1},
+{id:"oats",name:"燕麦片",kcal:367,protein:15},
+{id:"bread_whole",name:"全麦面包",kcal:246,protein:8.5,presets:[{label:"1 片 ≈40g",grams:40}]},
+{id:"sweet_potato",name:"红薯（蒸）",kcal:90,protein:1.5},
+{id:"corn",name:"玉米（鲜）",kcal:112,protein:4,presets:[{label:"1 根 ≈200g（可食部约 130g）",grams:130}]},
+{id:"yogurt",name:"酸奶（原味）",kcal:72,protein:2.5},
+{id:"banana",name:"香蕉",kcal:93,protein:1.4,presets:[{label:"1 根 ≈120g",grams:120}]},
+{id:"apple",name:"苹果",kcal:53,protein:0.3,presets:[{label:"1 个 ≈200g",grams:200}]},
+{id:"noodles",name:"面条（煮）",kcal:110,protein:3.5,presets:[{label:"1 碗 ≈250g",grams:250}]},
+{id:"mantou",name:"馒头",kcal:223,protein:7,presets:[{label:"1 个 ≈100g",grams:100}]},
+{id:"pork_lean",name:"瘦猪肉",kcal:143,protein:20.3},
+{id:"broccoli",name:"西兰花",kcal:34,protein:4.1},
+{id:"potato",name:"土豆",kcal:77,protein:2},
+{id:"peanut_butter",name:"花生酱",kcal:600,protein:22,presets:[{label:"1 勺 ≈15g",grams:15}]},
+{id:"oil",name:"食用油",kcal:899,protein:0,presets:[{label:"1 勺 ≈10g",grams:10}]},
+{id:"soy_milk",name:"豆浆",kcal:31,protein:3,presets:[{label:"1 杯 ≈300g",grams:300}]},
+{id:"egg_white",name:"鸡蛋白",kcal:60,protein:11.6,presets:[{label:"1 个蛋白 ≈33g",grams:33}]}
+];
+const FOOD_BY_ID = {}; FOODS.forEach(f=>FOOD_BY_ID[f.id]=f);
+
+/* ================= SVG 火柴人示意图 ================= */
+const _G=(y=98)=>`<line x1="10" y1="${y}" x2="160" y2="${y}" stroke="rgba(255,255,255,.25)" stroke-width="3" stroke-linecap="round"/>`;
+const _BOX=(x,y,w,h)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="rgba(255,255,255,.22)"/>`;
+const _BENCH=(x,y,w=96)=>`<rect x="${x}" y="${y}" width="${w}" height="7" rx="3" fill="rgba(255,255,255,.22)"/><line x1="${x+10}" y1="${y+7}" x2="${x+10}" y2="98" stroke="rgba(255,255,255,.16)" stroke-width="4"/><line x1="${x+w-10}" y1="${y+7}" x2="${x+w-10}" y2="98" stroke="rgba(255,255,255,.16)" stroke-width="4"/>`;
+const _BAR=(x1,y1,x2,y2)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(255,255,255,.55)" stroke-width="3.5" stroke-linecap="round"/><line x1="${x1+3}" y1="${y1-7}" x2="${x1+3}" y2="${y1+7}" stroke="rgba(255,255,255,.45)" stroke-width="6" stroke-linecap="round"/><line x1="${x2-3}" y1="${y2-7}" x2="${x2-3}" y2="${y2+7}" stroke="rgba(255,255,255,.45)" stroke-width="6" stroke-linecap="round"/>`;
+const _DB=(x,y)=>`<line x1="${x}" y1="${y}" x2="${x+9}" y2="${y}" stroke="rgba(255,255,255,.5)" stroke-width="3" stroke-linecap="round"/><rect x="${x-4}" y="${y-6}" width="5" height="12" rx="2" fill="rgba(255,255,255,.4)"/><rect x="${x+8}" y="${y-6}" width="5" height="12" rx="2" fill="rgba(255,255,255,.4)"/>`;
+const _LINE=(x1,y1,x2,y2,w=2.5)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(255,255,255,.4)" stroke-width="${w}" stroke-linecap="round"/>`;
+const _VLINE=(x,y1,y2,w=6)=>`<line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" stroke="rgba(255,255,255,.3)" stroke-width="${w}" stroke-linecap="round"/>`;
+
+const FIG = {
+generic:{h:[85,22],t:[[85,30],[85,62]],a:[[[85,36],[68,52]],[[85,36],[102,52]]],l:[[[85,62],[76,98]],[[85,62],[94,98]]],p:_G()},
+/* ---- 俯卧撑/支撑类 ---- */
+pl_pushup:{h:[128,66],t:[[118,70],[72,84]],a:[[[118,70],[112,94]],[[112,73],[106,95]]],l:[[[72,84],[46,90],[24,92]],[[74,87],[48,93],[26,95]]],p:_G(97)},
+pl_decline:{h:[128,68],t:[[118,72],[72,80]],a:[[[118,72],[112,95]],[[112,75],[106,96]]],l:[[[72,80],[46,80],[28,76]],[[74,83],[48,84],[30,80]]],p:_BOX(6,76,24,20)+_G(97)},
+pl_incline:{h:[146,56],t:[[138,62],[78,88]],a:[[[138,62],[134,71]],[[132,64],[128,72]]],l:[[[78,88],[52,92],[30,95]],[[80,91],[54,95],[32,97]]],p:_BOX(124,71,34,26)+_G(97)},
+pl_pike:{h:[126,82],t:[[114,80],[78,44]],a:[[[114,80],[108,94]],[[108,82],[102,94]]],l:[[[78,44],[58,72],[42,94]],[[80,47],[62,74],[48,94]]],p:_G(97)},
+pl_plank:{h:[124,70],t:[[112,74],[70,86]],a:[[[112,74],[112,88],[122,90]],[[106,76],[106,90],[116,92]]],l:[[[70,86],[46,91],[24,93]],[[72,89],[48,94],[26,96]]],p:_G(97)},
+pl_sideplank:{h:[108,56],t:[[96,64],[62,88]],a:[[[96,64],[96,88],[106,90]],[[96,64],[92,38]]],l:[[[62,88],[44,93],[26,95]],[[64,90],[46,95],[28,97]]],p:_G(97)},
+/* ---- 卧推/飞鸟类（仰卧） ---- */
+lie_bench:{h:[52,66],t:[[64,69],[106,72]],a:[[[70,69],[78,46]],[[76,72],[84,48]]],l:[[[106,72],[122,84],[128,96]],[[110,74],[126,86],[132,96]]],p:_BENCH(36,76,98)+_BAR(60,40,100,40)+_G()},
+lie_bench_db:{h:[52,66],t:[[64,69],[106,72]],a:[[[70,69],[76,46]],[[78,72],[86,48]]],l:[[[106,72],[122,84],[128,96]],[[110,74],[126,86],[132,96]]],p:_BENCH(36,76,98)+_DB(70,42)+_DB(84,44)+_G()},
+lie_incline:{h:[52,46],t:[[64,52],[104,68]],a:[[[70,52],[80,28]],[[76,56],[86,32]]],l:[[[104,68],[118,80],[126,94]],[[108,70],[122,82],[130,95]]],p:`<line x1="40" y1="84" x2="112" y2="60" stroke="rgba(255,255,255,.22)" stroke-width="7" stroke-linecap="round"/>`+_LINE(48,84,48,98,4)+_LINE(104,63,104,98,4)+_BAR(64,22,104,22)+_G()},
+lie_incline_db:{h:[52,46],t:[[64,52],[104,68]],a:[[[70,52],[78,28]],[[78,56],[88,32]]],l:[[[104,68],[118,80],[126,94]],[[108,70],[122,82],[130,95]]],p:`<line x1="40" y1="84" x2="112" y2="60" stroke="rgba(255,255,255,.22)" stroke-width="7" stroke-linecap="round"/>`+_LINE(48,84,48,98,4)+_LINE(104,63,104,98,4)+_DB(74,24)+_DB(86,28)+_G()},
+lie_decline:{h:[50,76],t:[[62,74],[104,62]],a:[[[68,72],[76,44]],[[74,74],[84,46]]],l:[[[104,62],[118,68],[124,80]],[[108,65],[122,71],[128,82]]],p:`<line x1="40" y1="70" x2="112" y2="84" stroke="rgba(255,255,255,.22)" stroke-width="7" stroke-linecap="round"/>`+_LINE(48,72,48,98,4)+_LINE(104,82,104,98,4)+_BAR(60,38,100,38)+_G()},
+lie_fly:{h:[52,66],t:[[64,69],[106,72]],a:[[[70,69],[48,56]],[[78,72],[58,62]]],l:[[[106,72],[122,84],[128,96]],[[110,74],[126,86],[132,96]]],p:_BENCH(36,76,98)+_DB(40,52)+_DB(52,58)+_G()},
+lie_fly_floor:{h:[52,80],t:[[64,82],[106,84]],a:[[[70,82],[48,70]],[[78,85],[58,76]]],l:[[[106,84],[122,90],[136,92]],[[110,87],[126,93],[140,95]]],p:_DB(40,66)+_DB(52,72)+_G(96)},
+lie_floor_press:{h:[52,80],t:[[64,82],[106,84]],a:[[[70,82],[78,56]],[[78,85],[88,58]]],l:[[[106,84],[122,90],[136,92]],[[110,87],[126,93],[140,95]]],p:_DB(74,52)+_DB(86,54)+_G(96)},
+lie_skull:{h:[52,66],t:[[64,69],[106,72]],a:[[[66,68],[52,50]],[[72,71],[58,53]]],l:[[[106,72],[122,84],[128,96]],[[110,74],[126,86],[132,96]]],p:_BENCH(36,76,98)+_BAR(34,44,70,44)+_G()},
+/* ---- 核心（仰卧类） ---- */
+lie_crunch:{h:[56,56],t:[[66,62],[100,78]],a:[[[70,64],[92,60]],[[74,68],[96,64]]],l:[[[100,78],[116,62],[132,92]],[[104,81],[120,66],[136,94]]],p:_G(96)},
+lie_revcrunch:{h:[46,82],t:[[58,80],[92,72]],a:[[[58,80],[42,88]],[[62,83],[46,91]]],l:[[[92,72],[102,52],[92,58]],[[96,75],[106,56],[96,62]]],p:_G(96)},
+lie_legraise:{h:[44,86],t:[[56,84],[96,80]],a:[[[56,84],[40,90]],[[60,87],[44,93]]],l:[[[96,80],[98,34]],[[102,82],[106,36]]],p:_G(96)},
+lie_deadbug:{h:[44,84],t:[[56,82],[94,78]],a:[[[56,82],[50,52]],[[62,84],[60,54]]],l:[[[94,78],[96,54],[106,58]],[[94,78],[120,72],[142,70]]],p:_G(96)},
+lie_bridge:{h:[42,86],t:[[54,84],[96,62]],a:[[[54,84],[38,90]],[[58,87],[42,93]]],l:[[[96,62],[116,66],[130,92]],[[100,65],[120,69],[134,94]]],p:_G(96)},
+lie_hipthrust:{h:[40,56],t:[[52,64],[92,60]],a:[[[52,64],[40,68]],[[56,67],[44,71]]],l:[[[92,60],[110,70],[122,94]],[[96,63],[114,73],[126,95]]],p:_BOX(18,64,28,32)+_BAR(76,54,108,54)+_G()},
+lie_superman:{h:[128,64],t:[[116,70],[70,82]],a:[[[116,70],[142,54]],[[112,74],[138,60]]],l:[[[70,82],[42,68]],[[74,85],[46,72]]],p:_G(94)},
+lie_legcurl:{h:[48,62],t:[[60,64],[110,66]],a:[[[60,64],[46,72]],[[64,67],[50,75]]],l:[[[110,66],[132,66],[124,44]],[[114,69],[136,69],[128,48]]],p:_BENCH(34,72,104)+_G()},
+lie_sidecrunch:{h:[54,54],t:[[64,64],[82,84]],a:[[[64,64],[48,52]]],l:[[[82,84],[104,78],[122,88]],[[84,87],[106,82],[124,92]]],p:_G(96)},
+/* ---- 深蹲/弓步/铰链类 ---- */
+st_squat:{h:[92,38],t:[[92,46],[84,72]],a:[[[92,48],[116,56]],[[92,52],[116,60]]],l:[[[84,72],[104,76],[102,98]],[[86,75],[98,79],[96,98]]],p:_G()},
+st_squat_bb:{h:[92,38],t:[[92,46],[84,72]],a:[[[92,48],[116,56]],[[92,52],[116,60]]],l:[[[84,72],[104,76],[102,98]],[[86,75],[98,79],[96,98]]],p:_BAR(66,42,118,42)+_G()},
+st_lunge:{h:[88,34],t:[[88,42],[84,72]],a:[[[88,46],[84,68]],[[88,46],[94,68]]],l:[[[84,72],[110,76],[114,98]],[[84,72],[62,88],[44,94]]],p:_G()},
+st_bulgarian:{h:[92,34],t:[[92,42],[88,72]],a:[[[92,46],[88,68]],[[92,46],[98,68]]],l:[[[88,72],[112,76],[116,98]],[[88,72],[64,78],[42,74]]],p:_BOX(14,74,26,24)+_G()},
+st_hinge:{h:[116,50],t:[[106,56],[72,74]],a:[[[106,56],[96,84]],[[112,59],[102,86]]],l:[[[72,74],[78,86],[72,98]],[[76,77],[82,88],[76,98]]],p:_BAR(74,86,118,86)+_G()},
+st_hinge_db:{h:[116,50],t:[[106,56],[72,74]],a:[[[106,56],[96,84]],[[112,59],[102,86]]],l:[[[72,74],[78,86],[72,98]],[[76,77],[82,88],[76,98]]],p:_DB(90,88)+_DB(98,90)+_G()},
+st_deadlift:{h:[118,46],t:[[106,52],[70,72]],a:[[[106,52],[100,90]],[[112,55],[106,91]]],l:[[[70,72],[82,82],[74,98]],[[74,75],[86,85],[78,98]]],p:_BAR(78,92,122,92)+_G()},
+st_goodmorning:{h:[116,50],t:[[106,56],[72,74]],a:[[[106,56],[122,46]],[[106,56],[110,44]]],l:[[[72,74],[78,86],[72,98]],[[76,77],[82,88],[76,98]]],p:_G()},
+st_revfly:{h:[118,52],t:[[108,58],[70,76]],a:[[[108,58],[92,80]],[[108,58],[126,78]]],l:[[[70,76],[76,88],[70,98]],[[74,79],[80,90],[74,98]]],p:_DB(84,84)+_DB(120,82)+_G()},
+st_row:{h:[116,50],t:[[106,56],[72,74]],a:[[[106,56],[100,72],[90,66]],[[112,59],[106,75],[96,69]]],l:[[[72,74],[78,86],[72,98]],[[76,77],[82,88],[76,98]]],p:_BAR(70,64,108,64)+_G()},
+st_row_db:{h:[104,50],t:[[98,56],[70,74]],a:[[[98,56],[126,72]],[[98,56],[88,70],[94,58]]],l:[[[70,74],[84,86],[80,98]],[[70,74],[60,88],[56,98]]],p:_BOX(118,72,32,26)+_DB(88,52)+_G()},
+st_pullup:{h:[90,36],t:[[90,44],[90,76]],a:[[[90,48],[76,32],[74,20]],[[90,48],[104,32],[106,20]]],l:[[[90,76],[96,88],[92,96]],[[90,76],[88,90],[84,96]]],p:_BAR(58,16,122,16)+_LINE(58,16,58,8,4)+_LINE(122,16,122,8,4)},
+st_hanglegra:{h:[90,36],t:[[90,44],[90,76]],a:[[[90,48],[76,32],[74,20]],[[90,48],[104,32],[106,20]]],l:[[[90,76],[122,80]],[[90,76],[120,86]]],p:_BAR(58,16,122,16)+_LINE(58,16,58,8,4)+_LINE(122,16,122,8,4)},
+st_backext:{h:[128,32],t:[[116,40],[76,74]],a:[[[116,40],[104,44]],[[116,44],[106,50]]],l:[[[76,74],[64,88],[58,94]]],p:`<line x1="52" y1="78" x2="92" y2="78" stroke="rgba(255,255,255,.22)" stroke-width="7" stroke-linecap="round"/>`+_LINE(60,78,60,98,4)+_LINE(84,78,84,98,4)+_G()},
+st_legpress:{h:[56,56],t:[[62,62],[74,80]],a:[[[62,64],[76,74]]],l:[[[74,80],[100,64],[116,58]],[[76,83],[102,68],[118,62]]],p:`<line x1="36" y1="86" x2="52" y2="50" stroke="rgba(255,255,255,.22)" stroke-width="7" stroke-linecap="round"/>`+_BOX(118,42,8,44)+_G()},
+st_dip:{h:[90,32],t:[[90,40],[90,72]],a:[[[90,46],[80,60],[78,74]],[[90,46],[92,74]]],l:[[[90,72],[98,84],[94,94]],[[90,72],[92,86],[88,95]]],p:_LINE(58,74,124,74,5)+_LINE(62,74,62,98,4)+_LINE(120,74,120,98,4)+_G()},
+st_benchdip:{h:[62,54],t:[[68,62],[78,82]],a:[[[68,62],[56,68]],[[72,66],[60,71]]],l:[[[78,82],[104,86],[126,90]],[[80,85],[106,89],[128,93]]],p:_BENCH(28,66,34)+_G()},
+st_nordic:{h:[58,42],t:[[66,50],[84,88]],a:[[[66,50],[90,64]]],l:[[[84,88],[84,92],[60,94]]],p:_G(96)},
+st_calf:{h:[85,22],t:[[85,30],[85,62]],a:[[[85,36],[108,40]],[[85,36],[82,60]]],l:[[[85,62],[86,86],[92,84]],[[85,62],[90,88],[96,86]]],p:_BOX(76,88,40,8)+_G()},
+st_calf_machine:{h:[85,24],t:[[85,32],[85,64]],a:[[[85,38],[82,62]],[[85,38],[90,62]]],l:[[[85,64],[86,88],[92,86]],[[85,64],[90,90],[96,88]]],p:`<line x1="70" y1="26" x2="100" y2="26" stroke="rgba(255,255,255,.35)" stroke-width="6" stroke-linecap="round"/>`+_LINE(74,26,74,98,4)+_BOX(78,90,38,8)+_G()},
+st_cablefly:{h:[80,22],t:[[82,30],[86,62]],a:[[[82,36],[106,42],[112,50]],[[82,40],[104,48],[110,54]]],l:[[[86,62],[78,98]],[[86,62],[96,98]]],p:_LINE(112,50,152,14)+_LINE(112,50,152,34)+_G()},
+st_facepull:{h:[85,22],t:[[85,30],[85,62]],a:[[[85,36],[98,34],[104,26]],[[85,36],[92,40],[100,30]]],l:[[[85,62],[78,98]],[[85,62],[94,98]]],p:_LINE(104,26,146,20)+_VLINE(148,14,30,4)+_G()},
+/* ---- 站姿肩部/手臂 ---- */
+stand_shrug:{h:[85,20],t:[[85,28],[85,62]],a:[[[85,34],[80,66]],[[85,34],[90,66]]],l:[[[85,62],[80,98]],[[85,62],[90,98]]],p:_DB(70,70)+_DB(88,70)+_G()},
+stand_latraise:{h:[85,22],t:[[85,30],[85,62]],a:[[[85,36],[58,36]],[[85,36],[112,36]]],l:[[[85,62],[80,98]],[[85,62],[90,98]]],p:_DB(48,32)+_DB(106,32)+_G()},
+stand_latraise_cable:{h:[85,22],t:[[85,30],[85,62]],a:[[[85,36],[58,38]],[[85,36],[92,62]]],l:[[[85,62],[80,98]],[[85,62],[90,98]]],p:_LINE(58,38,116,96)+_VLINE(118,90,98,4)+_G()},
+stand_frontraise:{h:[85,22],t:[[85,30],[85,62]],a:[[[85,36],[114,40]],[[85,36],[112,48]]],l:[[[85,62],[80,98]],[[85,62],[90,98]]],p:_DB(108,36)+_DB(106,44)+_G()},
+stand_curl:{h:[85,22],t:[[85,30],[85,62]],a:[[[85,36],[82,58],[102,48]],[[85,36],[88,60],[108,52]]],l:[[[85,62],[80,98]],[[85,62],[90,98]]],p:_DB(98,44)+_DB(104,48)+_G()},
+stand_curl_bb:{h:[85,22],t:[[85,30],[85,62]],a:[[[85,36],[82,58],[102,50]],[[85,36],[88,60],[108,52]]],l:[[[85,62],[80,98]],[[85,62],[90,98]]],p:_BAR(94,48,130,48)+_G()},
+stand_curl_cable:{h:[85,22],t:[[85,30],[85,62]],a:[[[85,36],[84,58],[104,50]]],l:[[[85,62],[80,98]],[[85,62],[90,98]]],p:_LINE(104,50,124,96)+_VLINE(126,90,98,4)+_G()},
+stand_pullapart:{h:[85,22],t:[[85,30],[85,62]],a:[[[85,36],[114,38]],[[85,36],[112,46]]],l:[[[85,62],[80,98]],[[85,62],[90,98]]],p:_LINE(112,38,112,46,3)+_G()},
+stand_ohp:{h:[85,28],t:[[85,36],[85,66]],a:[[[85,40],[76,16]],[[85,40],[94,16]]],l:[[[85,66],[80,98]],[[85,66],[90,98]]],p:_BAR(62,12,108,12)+_G()},
+stand_ohp_db:{h:[85,28],t:[[85,36],[85,66]],a:[[[85,40],[76,16]],[[85,40],[94,16]]],l:[[[85,66],[80,98]],[[85,66],[90,98]]],p:_DB(66,10)+_DB(90,10)+_G()},
+stand_tri_over:{h:[85,28],t:[[85,36],[85,66]],a:[[[85,40],[78,16],[88,12]],[[85,40],[84,18],[92,14]]],l:[[[85,66],[80,98]],[[85,66],[90,98]]],p:_DB(84,6)+_G()},
+stand_pushdown:{h:[85,22],t:[[85,30],[85,62]],a:[[[85,36],[82,54],[102,56]],[[85,36],[88,56],[106,58]]],l:[[[85,62],[80,98]],[[85,62],[90,98]]],p:_LINE(104,56,128,14)+_VLINE(130,8,24,4)+_G()},
+stand_farmer:{h:[85,20],t:[[85,28],[85,62]],a:[[[85,34],[80,66]],[[85,34],[90,66]]],l:[[[85,62],[80,98]],[[85,62],[90,98]]],p:`<rect x="68" y="68" width="14" height="20" rx="4" fill="rgba(255,255,255,.35)"/><rect x="88" y="68" width="14" height="20" rx="4" fill="rgba(255,255,255,.35)"/>`+_G()},
+stand_sidebend:{h:[79,22],t:[[84,30],[80,62]],a:[[[83,36],[74,66]],[[84,36],[92,50]]],l:[[[80,62],[76,98]],[[80,62],[88,98]]],p:_LINE(74,66,58,96)+_VLINE(56,90,98,4)+_G()},
+/* ---- 坐姿类 ---- */
+seat_row:{h:[66,46],t:[[68,54],[70,80]],a:[[[68,56],[96,62]],[[68,60],[94,66]]],l:[[[70,80],[102,80],[126,84]],[[70,80],[100,86],[124,90]]],p:_LINE(96,62,130,84)+_VLINE(132,72,92,5)+_G(94)},
+seat_fly:{h:[64,44],t:[[66,52],[68,78]],a:[[[66,54],[84,50],[96,58]],[[66,58],[82,56],[94,62]]],l:[[[68,78],[84,82],[86,98]],[[70,81],[86,86],[88,98]]],p:_VLINE(44,42,78,7)+_G()},
+seat_revfly:{h:[64,44],t:[[66,52],[68,78]],a:[[[66,54],[50,48],[38,42]],[[66,58],[52,54],[42,50]]],l:[[[68,78],[84,82],[86,98]],[[70,81],[86,86],[88,98]]],p:_VLINE(88,46,80,7)+_G()},
+seat_pulldown:{h:[70,42],t:[[72,50],[72,78]],a:[[[72,54],[62,32],[60,26]],[[72,54],[86,32],[92,26]]],l:[[[72,78],[88,84],[90,98]],[[74,81],[92,87],[94,98]]],p:_BAR(48,22,108,22)+_LINE(78,22,78,10)+_BOX(54,78,38,7)+_G()},
+seat_preacher:{h:[56,46],t:[[58,54],[62,76]],a:[[[58,54],[86,62],[112,50]],[[58,54],[84,66],[108,56]]],l:[[[62,76],[82,82],[84,98]]],p:`<line x1="94" y1="86" x2="124" y2="56" stroke="rgba(255,255,255,.3)" stroke-width="7" stroke-linecap="round"/>`+_LINE(104,76,104,98,4)+_DB(108,44)+_BOX(40,76,24,7)+_G()},
+seat_wrist:{h:[76,46],t:[[70,52],[62,74]],a:[[[70,54],[86,76],[96,84]]],l:[[[62,74],[84,80],[92,98]],[[64,77],[88,83],[96,98]]],p:_DB(92,88)+_BOX(38,74,26,7)+_G()},
+seat_wrist_bb:{h:[76,46],t:[[70,52],[62,74]],a:[[[70,54],[86,76],[96,84]],[[72,58],[88,79],[98,87]]],l:[[[62,74],[84,80],[92,98]],[[64,77],[88,83],[96,98]]],p:_BAR(88,88,118,88)+_BOX(38,74,26,7)+_G()},
+seat_legext:{h:[62,42],t:[[64,50],[68,74]],a:[[[64,54],[76,72]]],l:[[[68,74],[88,74],[112,62]],[[68,74],[84,78],[86,98]]],p:_BOX(46,74,34,7)+_VLINE(46,44,74,7)+_G()},
+seat_calf:{h:[60,42],t:[[62,50],[64,70]],a:[[[62,54],[86,68]]],l:[[[64,70],[88,74],[98,88]],[[66,73],[92,77],[102,90]]],p:_BOX(40,70,26,7)+_DB(84,66)+_BOX(90,88,28,8)+_G()},
+seat_twist:{h:[56,52],t:[[64,60],[76,82]],a:[[[64,62],[84,68]],[[66,66],[86,71]]],l:[[[76,82],[102,74],[120,88]],[[78,85],[104,78],[122,92]]],p:_G(96)},
+seat_crunch:{h:[56,52],t:[[64,60],[76,82]],a:[[[64,62],[84,68]],[[66,66],[86,71]]],l:[[[76,82],[102,74],[120,88]],[[78,85],[104,78],[122,92]]],p:_VLINE(46,44,82,6)+_G(96)},
+kneel_crunch:{h:[64,50],t:[[72,58],[84,86]],a:[[[72,58],[62,52],[58,44]],[[72,62],[66,56],[62,48]]],l:[[[84,86],[84,92],[62,94]]],p:_LINE(60,46,54,12)+_G(96)},
+/* ---- 体态类 ---- */
+po_chintuck:{h:[80,46],t:[[80,62],[78,92]],a:[],l:[],p:`<circle cx="80" cy="46" r="16" stroke="#ffd9a0" stroke-width="5" fill="none"/><line x1="74" y1="64" x2="70" y2="92" stroke="#ffd9a0" stroke-width="5" stroke-linecap="round"/><line x1="88" y1="64" x2="96" y2="92" stroke="#ffd9a0" stroke-width="5" stroke-linecap="round"/><line x1="56" y1="92" x2="116" y2="92" stroke="#ffd9a0" stroke-width="5" stroke-linecap="round"/><line x1="116" y1="46" x2="96" y2="46" stroke="rgba(255,255,255,.6)" stroke-width="3" stroke-linecap="round"/><path d="M100 40 L94 46 L100 52" stroke="rgba(255,255,255,.6)" stroke-width="3" fill="none" stroke-linecap="round"/>`},
+po_wallstand:{h:[98,22],t:[[98,30],[98,62]],a:[[[98,36],[96,66]]],l:[[[98,62],[96,98]],[[98,62],[102,98]]],p:_VLINE(110,10,98,6)+_G()},
+po_neckstretch:{h:[74,24],t:[[82,32],[85,62]],a:[[[84,36],[70,20],[76,16]],[[85,36],[90,62]]],l:[[[85,62],[80,98]],[[85,62],[92,98]]],p:_G()},
+po_tongue:{h:[86,44],t:[[84,64],[80,92]],a:[],l:[],p:`<circle cx="86" cy="44" r="17" stroke="#ffd9a0" stroke-width="5" fill="none"/><path d="M92 50 L104 40" stroke="rgba(255,255,255,.6)" stroke-width="3" stroke-linecap="round"/><path d="M100 44 L104 40 L101 47" stroke="rgba(255,255,255,.6)" stroke-width="2.5" fill="none" stroke-linecap="round"/><line x1="78" y1="64" x2="74" y2="92" stroke="#ffd9a0" stroke-width="5" stroke-linecap="round"/><line x1="90" y1="64" x2="96" y2="92" stroke="#ffd9a0" stroke-width="5" stroke-linecap="round"/>`},
+po_doorstretch:{h:[82,24],t:[[82,32],[82,64]],a:[[[82,38],[104,36],[126,36]],[[82,38],[86,62]]],l:[[[82,64],[100,80],[104,98]],[[82,64],[70,84],[58,96]]],p:_VLINE(130,18,98,7)+_G()},
+po_ytwl:{h:[130,72],t:[[118,76],[76,84]],a:[[[118,76],[146,58]],[[118,80],[148,70]]],l:[[[76,84],[48,90],[28,94]],[[78,87],[50,93],[30,97]]],p:_G(99)},
+po_wallangel:{h:[85,22],t:[[85,30],[85,62]],a:[[[85,36],[68,28],[74,48]],[[85,36],[102,28],[96,48]]],l:[[[85,62],[80,98]],[[85,62],[92,98]]],p:_VLINE(42,12,98,4)+_VLINE(128,12,98,4)+_G()},
+po_hipflexor:{h:[88,32],t:[[88,40],[84,70]],a:[[[88,42],[84,16]],[[88,42],[96,18]]],l:[[[84,70],[104,76],[106,98]],[[84,70],[64,88],[48,94]]],p:_G()},
+po_vacuum:{h:[85,20],t:[[85,28],[85,62]],a:[[[85,34],[72,50],[82,56]],[[85,34],[98,50],[88,56]]],l:[[[85,62],[80,98]],[[85,62],[90,98]]],p:`<line x1="112" y1="52" x2="94" y2="52" stroke="rgba(255,255,255,.6)" stroke-width="3" stroke-linecap="round"/><path d="M98 47 L93 52 L98 57" stroke="rgba(255,255,255,.6)" stroke-width="3" fill="none" stroke-linecap="round"/>`+_G()}
+};
+const ALIAS = {
+  seat_crunch:"seat_twist"
+};
+function figSVG(key){
+  const d = FIG[ALIAS[key]||key] || FIG.generic;
+  const S = 'stroke="#ffd9a0" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"';
+  let s = '<svg viewBox="0 0 170 110" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">';
+  if(d.p) s += d.p;
+  const pl = pts => pts.map(pt=>pt.join(" ")).join(" L");
+  s += '<path d="M'+pl(d.t)+'" '+S+'/>';
+  if(key!=="po_chintuck"&&key!=="po_tongue") s += '<circle cx="'+d.h[0]+'" cy="'+d.h[1]+'" r="7" '+S+'/>';
+  (d.a||[]).forEach(a=>{ s += '<path d="M'+pl(a)+'" '+S+'/>'; });
+  (d.l||[]).forEach(a=>{ s += '<path d="M'+pl(a)+'" '+S+'/>'; });
+  return s + '</svg>';
+}
+
+/* ================= 数据存取 ================= */
+let settings = (()=>{ try{ const s=JSON.parse(localStorage.getItem(LS_S));
+  if(s&&typeof s==="object") return { mode:(s.mode==="home"||s.mode==="gym")?s.mode:null,
+    calorieTarget:+s.calorieTarget>0?Math.round(+s.calorieTarget):2650,
+    proteinTarget:+s.proteinTarget>0?Math.round(+s.proteinTarget):140 };
+ }catch(e){} return {mode:null,calorieTarget:2650,proteinTarget:140}; })();
+function saveSettings(){ localStorage.setItem(LS_S, JSON.stringify(settings)); }
+let diet = (()=>{ try{ const d=JSON.parse(localStorage.getItem(LS_D)); if(d&&typeof d==="object"&&!Array.isArray(d)) return d; }catch(e){} return {}; })();
+function saveDiet(){ localStorage.setItem(LS_D, JSON.stringify(diet)); }
+function dayLog(){ const k=todayKey(); if(!diet[k]||typeof diet[k]!=="object") diet[k]={};
+  MEALS.forEach(m=>{ if(!Array.isArray(diet[k][m.id])) diet[k][m.id]=[]; }); return diet[k]; }
+function dayTotals(){ const d=dayLog(); let k=0,p=0;
+  MEALS.forEach(m=>d[m.id].forEach(e=>{ k+=+e.kcal||0; p+=+e.protein||0; }));
+  return {kcal:Math.round(k), protein:Math.round(p)}; }
+function visExercises(subId){
+  return EXERCISES.filter(e=>e.subId===subId && (e.mode===settings.mode||e.mode==="both"))
+    .sort((a,b)=>(LEVEL_ORD[a.level]-LEVEL_ORD[b.level])||a.name.localeCompare(b.name,"zh"));
+}
+function modeCount(){ return EXERCISES.filter(e=>!e.postureOnly&&(e.mode===settings.mode||e.mode==="both")).length; }
+
+/* ================= 通用 UI ================= */
+let toastTimer=null;
+function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg;
+  t.classList.add("show"); clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove("show"),1800); }
+function showModal(html){ document.getElementById("mbox").innerHTML=html;
+  document.getElementById("modal").classList.remove("hide"); }
+function hideModal(){ document.getElementById("modal").classList.add("hide"); }
+document.getElementById("modal").addEventListener("click",e=>{ if(e.target.id==="modal") hideModal(); });
+
+const TABS=[["home","#/home","🏠","首页"],["train","#/train","🏋️","训练"],["posture","#/posture","🧘","体态"],["diet","#/diet","🍗","饮食"]];
+function renderDock(active,show){ const d=document.getElementById("dock");
+  if(!show){ d.style.display="none"; return; }
+  d.style.display="flex";
+  d.innerHTML=TABS.map(t=>`<a href="${t[1]}" class="${t[0]===active?"on":""}"><i>${t[2]}</i>${t[3]}</a>`).join("");
+}
+function topbar(title,right){ return `<header class="topbar"><span class="back" onclick="history.back()">‹</span><h1>${esc(title)}</h1>${right||""}</header>`; }
+function notFound(tab){ return {tab, html:topbar("页面不存在")+`<div class="content"><div class="empty">页面不存在或已被移动</div></div>`}; }
+function exRow(e){ return `<a class="g-card row" href="#/exercise/${e.id}">
+  <div class="thumb">${figSVG(e.svg)}</div>
+  <div class="t"><b>${esc(e.name)}</b><span>${esc(e.equipment)}${e.mode==="both"?" · 通用":""}</span></div>
+  ${e.postureOnly?"":`<span class="tag ${e.level==="初级"?"lv0":"lv1"}">${e.level}</span>`}<span class="arrow">›</span></a>`; }
+
+/* ================= 页面 ================= */
+function pgOnboarding(){
+  const hc=EXERCISES.filter(e=>!e.postureOnly&&(e.mode==="home"||e.mode==="both")).length;
+  const gc=EXERCISES.filter(e=>!e.postureOnly&&(e.mode==="gym"||e.mode==="both")).length;
+  return {tab:"", dock:false, html:`
+  <div class="hero" style="padding-bottom:52px">
+    <div class="greet">健身训练助手</div>
+    <h2>选择你的<br>训练版本</h2>
+    <div class="sub">内容会按版本定制，之后可随时在「设置」中切换</div>
+  </div>
+  <div class="ob-cards">
+    <a class="ob-card" data-mode="home"><span class="go">选这个 ›</span><div class="emo">🏠</div><b>居家练习版</b><p>器械少也能练：徒手 / 哑铃 / 弹力带 / 瑜伽垫<br>${hc} 个训练动作 + 全部体态矫正</p></a>
+    <a class="ob-card g2" data-mode="gym"><span class="go">选这个 ›</span><div class="emo">🏋️</div><b>健身房版</b><p>器械齐全：杠铃 / 哑铃 / 龙门架 / 固定器械<br>${gc} 个训练动作 + 全部体态矫正</p></a>
+  </div>`, after(){
+    document.querySelectorAll(".ob-card").forEach(c=>c.addEventListener("click",()=>{
+      settings.mode=c.dataset.mode; saveSettings(); location.hash="#/home"; }));
+  }};
+}
+function pgHome(){
+  const t=dayTotals();
+  const kp=Math.min(100,Math.round(t.kcal/settings.calorieTarget*100));
+  return {tab:"home", html:`
+  <div class="hero">
+    <div class="h-top"><span class="badge">${MODE_NAME[settings.mode]} · ${weekdayCN()}</span><a class="gear" href="#/settings" aria-label="设置">⚙️</a></div>
+    <h2>今天，练什么？</h2>
+    <div class="sub">坚持下去就是答案</div>
+    <div class="stats">
+      <div class="mini-stat"><div class="k">今日热量</div><div class="v ${t.kcal>settings.calorieTarget?"over":""}">${t.kcal} <i>/ ${settings.calorieTarget}</i></div></div>
+      <div class="mini-stat"><div class="k">蛋白质</div><div class="v ${t.protein>settings.proteinTarget?"over":""}">${t.protein} <i>/ ${settings.proteinTarget} g</i></div></div>
+      <div class="ring" style="background:conic-gradient(#ffd9a0 0 ${kp}%, rgba(255,255,255,.18) ${kp}% 100%)"><i>${kp}%</i></div>
+    </div>
+  </div>
+  <div class="content">
+    <div class="sec-title">快捷入口</div>
+    <a class="g-card entry" href="#/train"><div class="ico">🏋️</div><div class="t"><b>训练动作库</b><span>6 大部位 · ${MODE_NAME[settings.mode]} ${modeCount()} 个动作</span></div><span class="arrow">›</span></a>
+    <a class="g-card entry" href="#/posture"><div class="ico g2">🧘</div><div class="t"><b>体态矫正</b><span>下颚线 · 圆肩 · 骨盆前倾 · 腰腹</span></div><span class="arrow">›</span></a>
+    <a class="g-card entry" href="#/diet"><div class="ico g3">🍗</div><div class="t"><b>记一餐</b><span>自动算热量与蛋白质</span></div><span class="arrow">›</span></a>
+    <div class="sec-title">按部位开练</div>
+    <div class="grid">${PARTS.map(p=>`<a class="part" href="#/train/${p.id}"><b>${p.name}</b><span>${p.subs.map(s=>s.name).join(" / ")}</span></a>`).join("")}</div>
+  </div>`};
+}
+function pgTrain(){
+  return {tab:"train", html:`
+  <header class="topbar"><h1>训练动作库</h1><span class="badge">${MODE_NAME[settings.mode]}</span></header>
+  <div class="content"><div class="grid">${PARTS.map(p=>{
+    const n=p.subs.reduce((s,x)=>s+visExercises(x.id).length,0);
+    return `<a class="part" href="#/train/${p.id}"><b>${p.name}</b><span>${p.subs.map(s=>s.name).join(" / ")}</span><br><span>${n} 个动作</span></a>`;
+  }).join("")}</div></div>`};
+}
+function pgPart({part}){
+  const p=PART_BY_ID[part]; if(!p) return notFound("train");
+  return {tab:"train", html:topbar(p.name,`<span class="badge">${MODE_NAME[settings.mode]}</span>`)+`
+  <div class="content">${p.subs.map(s=>{
+    const list=visExercises(s.id), n=list.length;
+    if(!n) return `<div class="g-card row gray"><div class="t"><b>${s.name}</b><span>本版本暂无动作</span></div></div>`;
+    return `<a class="g-card row" href="#/train/${part}/${s.id}">
+      <div class="thumb">${figSVG(list[0].svg)}</div>
+      <div class="t"><b>${s.name}</b><span>${MODE_NAME[settings.mode]} ${n} 个动作</span></div><span class="arrow">›</span></a>`;
+  }).join("")}</div>`};
+}
+function pgSub({part,sub}){
+  const p=PART_BY_ID[part], s=SUB_BY_ID[sub];
+  if(!p||!s||s.partId!==part) return notFound("train");
+  const list=visExercises(sub);
+  return {tab:"train", html:topbar(p.name+" · "+s.name,`<span class="badge">${MODE_NAME[settings.mode]}</span>`)+`
+  <div class="content">${list.length?list.map(exRow).join(""):`<div class="empty">当前版本下暂无动作<br>可在「设置」切换版本查看</div>`}</div>`};
+}
+function pgExercise({id}){
+  const e=EX_BY_ID[id]; if(!e) return notFound("train");
+  const crumb=e.postureOnly?"体态矫正":(PART_BY_ID[SUB_BY_ID[e.subId].partId].name+" / "+SUB_BY_ID[e.subId].name);
+  const chips=e.postureOnly
+    ? `<span class="chip">体态矫正</span><span class="chip">${esc(e.equipment)}</span>`
+    : `<span class="chip">${e.mode==="both"?"通用":(e.mode==="home"?"居家":"健身房")}</span><span class="chip">${esc(e.equipment)}</span><span class="chip ${e.level==="初级"?"lv0":""}">${e.level}</span>`;
+  return {tab:e.postureOnly?"posture":"train", html:`
+  <div class="d-hero">
+    <div class="back" onclick="history.back()">‹ ${esc(crumb)}</div>
+    <div class="fig">${figSVG(e.svg)}</div>
+    <h2>${esc(e.name)}</h2>
+    <div class="chips">${chips}</div>
+  </div>
+  <div class="content">
+    <div class="g-card"><div class="sets-line"><b>${esc(e.sets)}</b><span>组间休息 60-90 秒</span></div></div>
+    <div class="g-card"><div class="card-t">动作步骤</div>${e.steps.map((s,i)=>`<div class="step"><i>${i+1}</i><p>${esc(s)}</p></div>`).join("")}</div>
+    <div class="g-card"><div class="card-t">训练要点</div>${e.tips.map(t=>`<div class="dot-line"><p>${esc(t)}</p></div>`).join("")}</div>
+    <div class="tip-card">⚠ 常见错误：${e.mistakes.map(esc).join("；")}</div>
+    ${e.video?`<a class="video-btn" href="${esc(e.video)}" target="_blank" rel="noopener">查看视频教学 ↗</a>`:""}
+  </div>`};
+}
+function pgPosture(){
+  return {tab:"posture", html:`
+  <header class="topbar"><h1>体态矫正</h1></header>
+  <div class="content">${POSTURES.map(p=>`
+    <a class="g-card row" href="#/posture/${p.id}">
+      <div class="thumb">${figSVG(EX_BY_ID[p.exerciseIds[0]].svg)}</div>
+      <div class="t"><b>${esc(p.name)}</b><span>${esc(p.signs.split("，")[0])} · ${p.exerciseIds.length} 个矫正动作</span></div><span class="arrow">›</span></a>`).join("")}
+    <div class="empty" style="padding-top:10px">体态矫正动作不分版本，每天抽 5 分钟坚持即可</div>
+  </div>`};
+}
+function pgPostureDetail({id}){
+  const p=POSTURES.find(x=>x.id===id); if(!p) return notFound("posture");
+  return {tab:"posture", html:topbar(p.name)+`
+  <div class="content">
+    <div class="g-card"><div class="card-t">典型表现</div><div style="font-size:13px;line-height:1.7">${esc(p.signs)}</div></div>
+    <div class="g-card"><div class="card-t">形成原因</div><div style="font-size:13px;line-height:1.7">${esc(p.cause)}</div></div>
+    <div class="sec-title">矫正动作（点进看教学）</div>
+    ${p.exerciseIds.map(x=>exRow(EX_BY_ID[x])).join("")}
+  </div>`};
+}
+function pgDiet(){
+  const d=dayLog(), t=dayTotals();
+  const kp=Math.min(100,Math.round(t.kcal/settings.calorieTarget*100));
+  const pp=Math.min(100,Math.round(t.protein/settings.proteinTarget*100));
+  const total=MEALS.reduce((n,m)=>n+d[m.id].length,0);
+  return {tab:"diet", html:`
+  <header class="topbar"><h1>今日饮食</h1><span class="badge">${todayKey().slice(5)} ${weekdayCN()}</span></header>
+  <div class="content">
+    <div class="g-card">
+      <div class="sum-row">
+        <div><div class="card-t">热量</div><div class="sum-num ${t.kcal>settings.calorieTarget?"over":""}">${t.kcal} <i>/ ${settings.calorieTarget} kcal</i></div>
+          <div class="bar"><i style="width:${kp}%"></i></div></div>
+        <div><div class="card-t">蛋白质</div><div class="sum-num ${t.protein>settings.proteinTarget?"over":""}">${t.protein} <i>/ ${settings.proteinTarget} g</i></div>
+          <div class="bar"><i style="width:${pp}%"></i></div></div>
+      </div>
+    </div>
+    ${total===0?`<div class="empty">还没有记录，点 + 添加第一餐</div>`:""}
+    ${MEALS.map(m=>{
+      const items=d[m.id], sub=Math.round(items.reduce((s,e)=>s+(+e.kcal||0),0));
+      return `<div class="g-card">
+        <div class="meal-head"><b>${m.name}</b><span class="kcal">${sub?sub+" kcal":""}</span><a class="add" href="#/diet/add/${m.id}">+ 添加</a></div>
+        ${items.map((e,i)=>{ const f=FOOD_BY_ID[e.foodId];
+          return `<div class="mrow"><div class="t" data-m="${m.id}" data-i="${i}"><b>${esc(f?f.name:"未知食物")}</b><span>${e.grams} g</span></div>
+          <div class="v">${Math.round(e.kcal)} kcal<span>蛋白 ${Math.round(e.protein)} g</span></div>
+          <span class="del" data-m="${m.id}" data-i="${i}">✕</span></div>`; }).join("")}
+      </div>`; }).join("")}
+  </div>`, after(){
+    document.querySelectorAll(".mrow .t").forEach(el=>el.addEventListener("click",()=>openEditGrams(el.dataset.m,+el.dataset.i)));
+    document.querySelectorAll(".mrow .del").forEach(el=>el.addEventListener("click",()=>{
+      const d2=dayLog(), m=el.dataset.m, i=+el.dataset.i, e=d2[m][i];
+      if(!e) return;
+      const f=FOOD_BY_ID[e.foodId];
+      if(confirm(`删除「${f?f.name:"这条记录"} ${e.grams}g」？`)){ d2[m].splice(i,1); saveDiet(); render(); toast("已删除"); }
+    }));
+  }};
+}
+function openEditGrams(meal,idx){
+  const d=dayLog(), e=d[meal]&&d[meal][idx]; if(!e) return;
+  const f=FOOD_BY_ID[e.foodId];
+  showModal(`<h3>修改份量 · ${esc(f?f.name:"")}</h3>
+    <input class="inp" id="m-grams" type="number" inputmode="decimal" min="1" value="${e.grams}">
+    <div class="m-btns"><button class="btn btn-ghost" id="m-cancel">取消</button><button class="btn" id="m-save">保存</button></div>`);
+  document.getElementById("m-cancel").onclick=hideModal;
+  document.getElementById("m-save").onclick=()=>{
+    const g=parseFloat(document.getElementById("m-grams").value);
+    if(!(g>0)){ toast("请输入大于 0 的克数"); return; }
+    if(g>2000 && !confirm("份量超过 2000g，确认输入无误？")) return;
+    const ng=Math.round(g);
+    if(f){ e.kcal=Math.round(f.kcal*ng/100); e.protein=Math.round(f.protein*ng/100); }
+    else if(e.grams>0){ e.kcal=Math.round(e.kcal*ng/e.grams); e.protein=Math.round(e.protein*ng/e.grams); }
+    e.grams=ng; saveDiet(); hideModal(); render(); toast("已修改");
+  };
+}
+function pgDietAdd({meal}){
+  const m=MEALS.find(x=>x.id===meal); if(!m) return notFound("diet");
+  return {tab:"diet", html:topbar("添加到"+m.name)+`
+  <div class="content">
+    <div class="g-card"><input class="inp" id="s-inp" placeholder="🔍 搜索食物，如：鸡腿" autocomplete="off"></div>
+    <div id="s-list"></div>
+    <div id="s-detail"></div>
+  </div>`, after(){
+    const inp=document.getElementById("s-inp"), listEl=document.getElementById("s-list"), detEl=document.getElementById("s-detail");
+    function drawList(){
+      const kw=inp.value.trim();
+      const arr=kw?FOODS.filter(f=>f.name.indexOf(kw)>-1):FOODS;
+      if(!arr.length){ listEl.innerHTML=`<div class="empty">食物库未收录「${esc(kw)}」</div>`; return; }
+      listEl.innerHTML=arr.map(f=>`<div class="g-card row" data-fid="${f.id}" style="cursor:pointer">
+        <div class="t"><b>${esc(f.name)}</b><span>${f.kcal} kcal/100g · 蛋白 ${f.protein} g/100g</span></div><span class="arrow">›</span></div>`).join("");
+      listEl.querySelectorAll(".row").forEach(el=>el.addEventListener("click",()=>drawDetail(FOOD_BY_ID[el.dataset.fid])));
+    }
+    function drawDetail(f){
+      listEl.style.display="none"; inp.parentElement.style.display="none";
+      detEl.innerHTML=`
+        <div class="g-card"><div class="row"><div class="t"><b>${esc(f.name)}</b><span>${f.kcal} kcal/100g · 蛋白 ${f.protein} g/100g</span></div>
+          <span class="r-act" id="re-pick" style="color:#ffd9a0;font-size:12px;cursor:pointer;white-space:nowrap">‹ 重选</span></div></div>
+        <div class="g-card"><div class="card-t">份量（克）</div>
+          <input class="inp" id="g-inp" type="number" inputmode="decimal" min="1" placeholder="输入克数，如 120">
+          ${f.presets?`<div style="margin-top:10px">${f.presets.map(p=>`<span class="preset" data-g="${p.grams}">${esc(p.label)}</span>`).join("")}</div>`:""}
+        </div>
+        <div class="g-card"><div class="card-t">将计入</div><div class="preview" id="pv">选择份量后自动计算</div></div>
+        <button class="btn" id="save" disabled>保存到${m.name}</button>`;
+      const gInp=document.getElementById("g-inp"), pv=document.getElementById("pv"), saveBtn=document.getElementById("save");
+      function upd(){
+        const g=parseFloat(gInp.value);
+        if(g>0){ const k=Math.round(f.kcal*g/100), p=Math.round(f.protein*g/100);
+          pv.innerHTML=`<b>${k}</b> kcal · 蛋白 <b>${p}</b> g`; saveBtn.disabled=false;
+        } else { pv.textContent="选择份量后自动计算"; saveBtn.disabled=true; }
+      }
+      gInp.addEventListener("input",upd);
+      detEl.querySelectorAll(".preset").forEach(el=>el.addEventListener("click",()=>{ gInp.value=el.dataset.g; upd(); }));
+      document.getElementById("re-pick").onclick=()=>{ detEl.innerHTML=""; listEl.style.display=""; inp.parentElement.style.display=""; };
+      if(f.presets&&f.presets.length){ gInp.value=f.presets[0].grams; upd(); }
+      saveBtn.onclick=()=>{
+        const g=parseFloat(gInp.value);
+        if(!(g>0)) return;
+        if(g>2000 && !confirm("份量超过 2000g，确认输入无误？")) return;
+        const ng=Math.round(g);
+        dayLog()[m.id].push({ foodId:f.id, grams:ng,
+          kcal:Math.round(f.kcal*ng/100), protein:Math.round(f.protein*ng/100) });
+        saveDiet(); location.hash="#/diet"; toast("已加入"+m.name);
+      };
+    }
+    drawList(); inp.addEventListener("input",drawList);
+  }};
+}
+function pgSettings(){
+  return {tab:"", html:topbar("设置")+`
+  <div class="content">
+    <div class="g-card"><div class="card-t">训练版本</div>
+      <div class="set-row"><div style="flex:1;min-width:0"><b style="font-size:15px">${MODE_NAME[settings.mode]}</b>
+        <div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:2px">切换后动作库立即重新过滤</div></div>
+        <button class="btn" id="sw-mode" style="width:auto;padding:10px 14px;font-size:12.5px">切换为${settings.mode==="home"?"健身房版":"居家版"}</button></div></div>
+    <div class="g-card"><div class="card-t">每日营养目标</div>
+      <div class="set-row" style="margin-bottom:10px"><span style="width:76px;font-size:13px">热量 kcal</span><input class="inp" id="tg-cal" type="number" inputmode="numeric" min="500" value="${settings.calorieTarget}"></div>
+      <div class="set-row"><span style="width:76px;font-size:13px">蛋白质 g</span><input class="inp" id="tg-pro" type="number" inputmode="numeric" min="20" value="${settings.proteinTarget}"></div>
+      <button class="btn" id="save-tg" style="margin-top:12px">保存目标</button></div>
+    <div class="g-card"><div class="card-t">数据备份</div>
+      <p style="font-size:12px;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:12px">数据只保存在本机浏览器中，清理浏览器数据或换手机会丢失，建议定期导出备份。</p>
+      <button class="btn" id="exp">导出全部数据（JSON）</button>
+      <button class="btn btn-ghost" id="imp">导入备份文件</button>
+      <input type="file" id="imp-file" accept="application/json,.json" style="display:none"></div>
+    <div class="g-card"><div class="card-t">关于</div>
+      <p style="font-size:12.5px;color:rgba(255,255,255,.6);line-height:1.9">健身训练助手 v1.0（动作库 v1.0 · 食物库 v1.0）<br>${EXERCISES.length} 个动作（含 ${EXERCISES.filter(e=>e.postureOnly).length} 个体态矫正）· ${FOODS.length} 种食物<br>纯单机离线应用，除视频外链外无任何网络请求</p></div>
+  </div>`, after(){
+    document.getElementById("sw-mode").onclick=()=>{
+      settings.mode=settings.mode==="home"?"gym":"home"; saveSettings(); render(); toast("已切换为"+MODE_NAME[settings.mode]); };
+    document.getElementById("save-tg").onclick=()=>{
+      const c=parseInt(document.getElementById("tg-cal").value,10), p=parseInt(document.getElementById("tg-pro").value,10);
+      if(!(c>=500&&c<=10000)){ toast("热量目标需在 500-10000 之间"); return; }
+      if(!(p>=20&&p<=500)){ toast("蛋白质目标需在 20-500 之间"); return; }
+      settings.calorieTarget=c; settings.proteinTarget=p; saveSettings(); render(); toast("目标已保存"); };
+    document.getElementById("exp").onclick=()=>{
+      const data={app:"fitness-trainer",version:1,exportedAt:new Date().toISOString(),settings,diet};
+      const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+      const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+      a.download="健身训练助手备份-"+todayKey()+".json";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(a.href),1000); toast("已导出备份文件"); };
+    document.getElementById("imp").onclick=()=>document.getElementById("imp-file").click();
+    document.getElementById("imp-file").onchange=ev=>{
+      const file=ev.target.files[0]; if(!file) return;
+      const rd=new FileReader();
+      rd.onload=()=>{ try{
+          const obj=JSON.parse(rd.result);
+          if(!validBackup(obj)) throw new Error("bad");
+          if(!confirm("导入将覆盖当前全部数据（版本 / 目标 / 饮食记录），确认导入？")) return;
+          settings={ mode:(obj.settings.mode==="home"||obj.settings.mode==="gym")?obj.settings.mode:null,
+            calorieTarget:Math.round(+obj.settings.calorieTarget), proteinTarget:Math.round(+obj.settings.proteinTarget) };
+          diet=obj.diet||{}; saveSettings(); saveDiet();
+          location.hash="#/home"; render(); toast("导入成功");
+        }catch(err){ toast("文件格式非法，已取消导入"); }
+        ev.target.value=""; };
+      rd.readAsText(file); };
+  }};
+}
+function validBackup(o){
+  if(!o||typeof o!=="object") return false;
+  const s=o.settings;
+  if(!s||typeof s!=="object") return false;
+  if(!(s.mode===null||s.mode==="home"||s.mode==="gym")) return false;
+  if(!(+s.calorieTarget>0)||!(+s.proteinTarget>0)) return false;
+  if(o.diet!==undefined){
+    if(!o.diet||typeof o.diet!=="object"||Array.isArray(o.diet)) return false;
+    for(const k of Object.keys(o.diet)){
+      const day=o.diet[k]; if(!day||typeof day!=="object") return false;
+      for(const m of ["breakfast","lunch","dinner","snack"]){
+        if(day[m]===undefined) continue;
+        if(!Array.isArray(day[m])) return false;
+        for(const e of day[m]){
+          if(!e||typeof e.foodId!=="string"||!(+e.grams>0)||!(+e.kcal>=0)||!(+e.protein>=0)) return false;
+        }
+      }
+    }
+  }
+  return true;
+}
+
+/* ================= 路由 ================= */
+const ROUTES=[
+  {p:["onboarding"],f:pgOnboarding},
+  {p:["home"],f:pgHome},
+  {p:["train"],f:pgTrain},
+  {p:["train",":part"],f:pgPart},
+  {p:["train",":part",":sub"],f:pgSub},
+  {p:["exercise",":id"],f:pgExercise},
+  {p:["posture"],f:pgPosture},
+  {p:["posture",":id"],f:pgPostureDetail},
+  {p:["diet"],f:pgDiet},
+  {p:["diet","add",":meal"],f:pgDietAdd},
+  {p:["settings"],f:pgSettings}
+];
+function matchRoute(seg){
+  for(const r of ROUTES){
+    if(r.p.length!==seg.length) continue;
+    const params={}; let ok=true;
+    for(let i=0;i<r.p.length;i++){
+      const pat=r.p[i];
+      if(pat[0]===":") params[pat.slice(1)]=decodeURIComponent(seg[i]);
+      else if(pat!==seg[i]){ ok=false; break; }
+    }
+    if(ok) return {f:r.f, params};
+  }
+  return null;
+}
+function render(){
+  const seg=(location.hash||"").replace(/^#\/?/,"").split("/").filter(Boolean);
+  if(!settings.mode){
+    if(seg[0]!=="onboarding"){ location.replace("#/onboarding"); return; }
+  } else if(seg.length===0){ location.replace("#/home"); return; }
+  const m=matchRoute(seg);
+  if(!m){ location.replace(settings.mode?"#/home":"#/onboarding"); return; }
+  const r=m.f(m.params);
+  document.getElementById("app").innerHTML=r.html;
+  renderDock(r.tab, r.dock!==false);
+  window.scrollTo(0,0);
+  if(r.after) r.after();
+}
+window.addEventListener("hashchange", render);
+render();
+
+// 注册 Service Worker，实现离线缓存（部署到 HTTPS 后生效）
+if("serviceWorker" in navigator){
+  window.addEventListener("load", ()=>{
+    navigator.serviceWorker.register("sw.js").catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
